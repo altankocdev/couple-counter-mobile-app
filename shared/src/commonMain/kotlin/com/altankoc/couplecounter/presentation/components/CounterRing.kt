@@ -57,10 +57,10 @@ fun CounterRing(
 
         val ringBrush = Brush.sweepGradient(
             listOf(
-                palette.textSecondary,
-                palette.textOnDark.copy(alpha = 0.25f),
-                palette.textSecondary.copy(alpha = 0.8f),
-                palette.textSecondary
+                palette.contentSecondary,
+                palette.contentBottom.copy(alpha = 0.25f),
+                palette.contentSecondary.copy(alpha = 0.8f),
+                palette.contentSecondary
             )
         )
 
@@ -90,7 +90,7 @@ fun CounterRing(
                         fontFamily = fonts.serif,
                         fontSize = numberSize,
                         lineHeight = numberSize * 1.15f,
-                        color = palette.textOnDark
+                        color = palette.contentBottom
                     )
                 )
                 Spacer(Modifier.width(4.dp))
@@ -101,7 +101,7 @@ fun CounterRing(
                         fontFamily = fonts.script,
                         fontSize = unitSize,
                         lineHeight = unitSize * 1.3f,
-                        color = palette.textOnDark
+                        color = palette.contentBottom
                     )
                 )
             }

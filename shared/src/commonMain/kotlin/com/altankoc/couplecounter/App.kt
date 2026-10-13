@@ -57,7 +57,7 @@ private fun ElapsedTimePreview() {
     ) {
         Spacer(Modifier.height(48.dp))
 
-        LineFramed(lineColor = palette.textOnLight.copy(alpha = 0.35f)) {
+        LineFramed(lineColor = palette.contentTop.copy(alpha = 0.35f)) {
             Icon(
                 imageVector = AppIcons.Heart,
                 contentDescription = null,
@@ -72,7 +72,7 @@ private fun ElapsedTimePreview() {
             text = "Ne zamandır",
             style = typography.headlineMedium.copy(letterSpacing = 4.sp),
             fontWeight = FontWeight.Light,
-            color = palette.textOnLight
+            color = palette.contentTop
         )
 
         Spacer(Modifier.weight(1f))
@@ -92,7 +92,7 @@ private fun ElapsedTimePreview() {
             modifier = Modifier
                 .width(56.dp)
                 .height(1.dp)
-                .background(palette.textSecondary.copy(alpha = 0.35f))
+                .background(palette.contentSecondary.copy(alpha = 0.35f))
         )
 
         Spacer(Modifier.height(28.dp))
@@ -125,17 +125,17 @@ private fun ElapsedTimePreview() {
 
         Spacer(Modifier.weight(1f))
 
-        LineFramed(lineColor = palette.textSecondary.copy(alpha = 0.35f)) {
+        LineFramed(lineColor = palette.contentSecondary.copy(alpha = 0.35f)) {
             Text(
                 text = buildAnnotatedString {
                     append("toplam ")
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = palette.textOnDark)) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = palette.contentBottom)) {
                         append("260")
                     }
                     append(" gün")
                 },
                 style = typography.labelLarge.copy(letterSpacing = 2.sp),
-                color = palette.textSecondary
+                color = palette.contentSecondary
             )
         }
 
@@ -157,7 +157,7 @@ private fun MediumUnit(value: String, label: String) {
             modifier = Modifier.alignByBaseline(),
             style = typography.headlineLarge,
             fontWeight = FontWeight.Normal,
-            color = palette.textOnDark
+            color = palette.contentBottom
         )
         Spacer(Modifier.width(8.dp))
         Text(
@@ -165,7 +165,7 @@ private fun MediumUnit(value: String, label: String) {
             modifier = Modifier.alignByBaseline(),
             style = typography.titleMedium,
             fontWeight = FontWeight.Light,
-            color = palette.textOnDark
+            color = palette.contentBottom
         )
     }
 }
