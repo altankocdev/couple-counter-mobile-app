@@ -1,12 +1,20 @@
 package com.altankoc.couplecounter.domain.model
 
+import kotlinx.datetime.LocalDate
+
 sealed interface MeetingCountdown {
-    data object NotSet : MeetingCountdown
-    data object Today : MeetingCountdown
-    data object Passed : MeetingCountdown
+
+    data object NotScheduled : MeetingCountdown
+
+    data object Expired : MeetingCountdown
+
+    data class Today(val date: LocalDate) : MeetingCountdown
 
     data class Upcoming(
-        val days: Long,
-        val clock: ClockTime
+        val date: LocalDate,
+        val months: Int,
+        val days: Int,
+        val clock: ClockTime,
+        val progress: Float
     ) : MeetingCountdown
 }
