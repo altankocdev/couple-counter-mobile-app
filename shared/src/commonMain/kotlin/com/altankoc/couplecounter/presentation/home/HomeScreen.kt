@@ -24,6 +24,17 @@ import com.altankoc.couplecounter.presentation.components.PageIndicator
 import com.altankoc.couplecounter.presentation.elapsed.ElapsedRoot
 import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.altankoc.couplecounter.presentation.components.HeartHourglass
 
 private const val PAGE_COUNT = 2
 private const val ELAPSED_PAGE = 0
@@ -76,6 +87,14 @@ fun HomeScreen(
 @Composable
 private fun MeetingPlaceholder() {
     val palette = CoupleCounterTheme.palette
+    val demoTransition = rememberInfiniteTransition(label = "hourglassDemo")
+    val demoProgress by demoTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(12_000, easing = LinearEasing)),
+        label = "demoProgress"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -89,5 +108,13 @@ private fun MeetingPlaceholder() {
             fontWeight = FontWeight.Light,
             color = palette.contentTop
         )
+        Spacer(Modifier.weight(1f))
+        HeartHourglass(
+            progress = demoProgress,
+            isComplete = demoProgress > 0.97f,
+            modifier = Modifier.size(width = 150.dp, height = 270.dp)
+        )
+        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(48.dp))
     }
 }
