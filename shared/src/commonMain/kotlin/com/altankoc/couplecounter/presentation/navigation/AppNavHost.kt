@@ -11,7 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.altankoc.couplecounter.presentation.home.HomeScreen
-import com.altankoc.couplecounter.presentation.onboarding.OnboardingScreen
+import com.altankoc.couplecounter.presentation.onboarding.OnboardingRoot
 import com.altankoc.couplecounter.presentation.settings.SettingsScreen
 
 @Composable
@@ -28,8 +28,8 @@ fun AppNavHost(
         exitTransition = { fadeOut() }
     ) {
         composable<OnboardingRoute> {
-            OnboardingScreen(
-                onContinue = {
+            OnboardingRoot(
+                onCompleted = {
                     navController.navigate(HomeRoute) {
                         popUpTo<OnboardingRoute> { inclusive = true }
                     }
