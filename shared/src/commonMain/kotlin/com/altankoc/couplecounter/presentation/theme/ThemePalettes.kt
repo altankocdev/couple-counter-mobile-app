@@ -1,6 +1,7 @@
 package com.altankoc.couplecounter.presentation.theme
 
 import androidx.compose.ui.graphics.Color
+import com.altankoc.couplecounter.domain.model.ThemeId
 
 object ThemePalettes {
 
@@ -14,6 +15,8 @@ object ThemePalettes {
     }
 
     val Holst = ThemePalette(
+        id = ThemeId("holst"),
+        name = "Holst",
         gradientStops = listOf(
             0.00f to HolstColors.Sand,
             0.12f to HolstColors.Sand,
@@ -21,13 +24,17 @@ object ThemePalettes {
             0.65f to HolstColors.Navy,
             1.00f to HolstColors.DeepNavy
         ),
-        isTopLight = true,
-        isBottomLight = false,
         contentTop = HolstColors.Navy,
         contentBottom = HolstColors.Cream,
         contentSecondary = HolstColors.Sand,
-        accent = HolstColors.Sage
+        accent = HolstColors.Sage,
+        isTopLight = true,
+        isBottomLight = false
     )
 
     val Default = Holst
+
+    val all: List<ThemePalette> = listOf(Holst)
+
+    fun byId(id: ThemeId?): ThemePalette = all.firstOrNull { it.id == id } ?: Default
 }
