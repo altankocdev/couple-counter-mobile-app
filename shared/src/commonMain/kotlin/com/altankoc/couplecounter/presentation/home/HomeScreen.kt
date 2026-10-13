@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altankoc.couplecounter.presentation.components.PageIndicator
+import com.altankoc.couplecounter.presentation.elapsed.ElapsedRoot
 import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 
@@ -41,7 +42,7 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) { page ->
             when (page) {
-                ELAPSED_PAGE -> ElapsedTimePreview()
+                ELAPSED_PAGE -> ElapsedRoot()
                 else -> MeetingPlaceholder()
             }
         }

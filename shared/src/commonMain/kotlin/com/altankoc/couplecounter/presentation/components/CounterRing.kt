@@ -1,6 +1,14 @@
 package com.altankoc.couplecounter.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -28,14 +36,19 @@ import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 
 private const val RING_GAP_DEGREES = 28f
 private const val RING_WIDTH_FRACTION = 0.64f
+private const val UNIT_SIZE_FRACTION = 0.20f
 private val MaxRingSize = 280.dp
 private val HeartSize = 14.dp
+
+private data class RingText(val value: String, val unit: String)
 
 @Composable
 fun CounterRing(
     value: String,
     unit: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    onClickLabel: String? = null
 ) {
     val palette = CoupleCounterTheme.palette
     val fonts = CoupleCounterTheme.fonts
@@ -46,14 +59,7 @@ fun CounterRing(
         contentAlignment = Alignment.Center
     ) {
         val ringSize = minOf(maxWidth * RING_WIDTH_FRACTION, MaxRingSize)
-        val numberFraction = when (value.length) {
-            1 -> 0.50f
-            2 -> 0.42f
-            3 -> 0.32f
-            else -> 0.26f
-        }
-        val numberSize = with(density) { (ringSize * numberFraction).toSp() }
-        val unitSize = with(density) { (ringSize * 0.20f).toSp() }
+        val unitSize = with(density) { (ringSize * UNIT_SIZE_FRACTION).toSp() }
 
         val ringBrush = Brush.sweepGradient(
             listOf(
@@ -64,8 +70,21 @@ fun CounterRing(
             )
         )
 
+        val clickModifier = if (onClick != null) {
+            Modifier.clickable(
+                interactionSource = null,
+                indication = null,
+                onClickLabel = onClickLabel,
+                onClick = onClick
+            )
+        } else {
+            Modifier
+        }
+
         Box(
-            modifier = Modifier.size(ringSize),
+            modifier = Modifier
+                .size(ringSize)
+                .then(clickModifier),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -82,28 +101,40 @@ fun CounterRing(
                 )
             }
 
-            Row {
-                Text(
-                    text = value,
-                    modifier = Modifier.alignByBaseline(),
-                    style = TextStyle(
-                        fontFamily = fonts.serif,
-                        fontSize = numberSize,
-                        lineHeight = numberSize * 1.15f,
-                        color = palette.contentBottom
+            AnimatedContent(
+                targetState = RingText(value, unit),
+                transitionSpec = {
+                    (fadeIn(tween(durationMillis = 450, delayMillis = 100)) +
+                            scaleIn(tween(durationMillis = 450, delayMillis = 100), initialScale = 0.9f)) togetherWith
+                            (fadeOut(tween(durationMillis = 200)) +
+                                    scaleOut(tween(durationMillis = 200), targetScale = 1.1f))
+                },
+                label = "counterRingText"
+            ) { text ->
+                val numberSize = with(density) { (ringSize * numberFractionFor(text.value)).toSp() }
+                Row {
+                    Text(
+                        text = text.value,
+                        modifier = Modifier.alignByBaseline(),
+                        style = TextStyle(
+                            fontFamily = fonts.serif,
+                            fontSize = numberSize,
+                            lineHeight = numberSize * 1.15f,
+                            color = palette.contentBottom
+                        )
                     )
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = unit,
-                    modifier = Modifier.alignByBaseline(),
-                    style = TextStyle(
-                        fontFamily = fonts.script,
-                        fontSize = unitSize,
-                        lineHeight = unitSize * 1.3f,
-                        color = palette.contentBottom
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = text.unit,
+                        modifier = Modifier.alignByBaseline(),
+                        style = TextStyle(
+                            fontFamily = fonts.script,
+                            fontSize = unitSize,
+                            lineHeight = unitSize * 1.3f,
+                            color = palette.contentBottom
+                        )
                     )
-                )
+                }
             }
 
             Icon(
@@ -117,4 +148,11 @@ fun CounterRing(
             )
         }
     }
+}
+
+private fun numberFractionFor(value: String): Float = when (value.length) {
+    1 -> 0.50f
+    2 -> 0.42f
+    3 -> 0.32f
+    else -> 0.26f
 }

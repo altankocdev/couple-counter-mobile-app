@@ -49,11 +49,13 @@ fun TimeUnitCard(
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.height(8.dp))
-        Text(
+        RollingNumberText(
             text = value,
-            style = typography.headlineMedium.copy(fontFeatureSettings = TABULAR_NUMBERS),
-            fontWeight = FontWeight.Normal,
-            color = palette.contentBottom
+            style = typography.headlineMedium.copy(
+                fontFeatureSettings = TABULAR_NUMBERS,
+                fontWeight = FontWeight.Normal,
+                color = palette.contentBottom
+            )
         )
         Spacer(Modifier.height(4.dp))
         Text(
