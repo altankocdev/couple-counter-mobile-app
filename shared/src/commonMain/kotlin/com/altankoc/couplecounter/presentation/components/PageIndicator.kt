@@ -29,7 +29,7 @@ fun PageIndicator(
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(palette.textOnDark.copy(alpha = alpha))
+                    .background(palette.contentBottom.copy(alpha = alpha))
             )
         }
     }

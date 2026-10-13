@@ -18,13 +18,17 @@ fun CoupleCounterTheme(
     content: @Composable () -> Unit
 ) {
     val fonts = appFonts()
+    SystemBarsAppearance(
+        isTopLight = palette.isTopLight,
+        isBottomLight = palette.isBottomLight
+    )
     val colorScheme = darkColorScheme(
         primary = palette.accent,
-        onPrimary = palette.textOnDark,
+        onPrimary = palette.contentBottom,
         background = palette.gradientStops.last().second,
-        onBackground = palette.textOnDark,
+        onBackground = palette.contentBottom,
         surface = palette.gradientStops.last().second,
-        onSurface = palette.textOnDark
+        onSurface = palette.contentBottom
     )
 
     CompositionLocalProvider(
@@ -49,4 +53,5 @@ object CoupleCounterTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalAppFonts.current
+
 }

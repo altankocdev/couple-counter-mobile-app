@@ -21,9 +21,11 @@ object ThemePalettes {
             0.65f to HolstColors.Navy,
             1.00f to HolstColors.DeepNavy
         ),
-        textOnLight = HolstColors.Navy,
-        textOnDark = HolstColors.Cream,
-        textSecondary = HolstColors.Sand,
+        isTopLight = true,
+        isBottomLight = false,
+        contentTop = HolstColors.Navy,
+        contentBottom = HolstColors.Cream,
+        contentSecondary = HolstColors.Sand,
         accent = HolstColors.Sage
     )
 

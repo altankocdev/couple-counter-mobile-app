@@ -37,15 +37,15 @@ fun TimeUnitCard(
     Column(
         modifier = modifier
             .clip(CardShape)
-            .background(palette.textOnDark.copy(alpha = 0.05f))
-            .border(1.dp, palette.textOnDark.copy(alpha = 0.14f), CardShape)
+            .background(palette.contentBottom.copy(alpha = 0.05f))
+            .border(1.dp, palette.contentBottom.copy(alpha = 0.14f), CardShape)
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = palette.textSecondary,
+            tint = palette.contentSecondary,
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.height(8.dp))
@@ -53,13 +53,13 @@ fun TimeUnitCard(
             text = value,
             style = typography.headlineMedium.copy(fontFeatureSettings = TABULAR_NUMBERS),
             fontWeight = FontWeight.Normal,
-            color = palette.textOnDark
+            color = palette.contentBottom
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = label,
             style = typography.labelSmall.copy(letterSpacing = 2.sp),
-            color = palette.textSecondary
+            color = palette.contentSecondary
         )
     }
 }
