@@ -1,13 +1,17 @@
 package com.altankoc.couplecounter.presentation.theme
 
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
@@ -34,9 +38,9 @@ fun CoupleCounterTheme(
     val colorScheme = darkColorScheme(
         primary = animatedPalette.accent,
         onPrimary = animatedPalette.onAccent,
-        background = palette.gradientStops.last().second,
+        background = animatedPalette.surface,
         onBackground = animatedPalette.contentBottom,
-        surface = palette.gradientStops.last().second,
+        surface = animatedPalette.surface,
         onSurface = animatedPalette.contentBottom
     )
 
@@ -54,28 +58,41 @@ fun CoupleCounterTheme(
 
 @Composable
 private fun animatePalette(target: ThemePalette): ThemePalette {
-    val contentTop by animateThemeColor(target.contentTop, "contentTop")
-    val contentBottom by animateThemeColor(target.contentBottom, "contentBottom")
-    val contentSecondary by animateThemeColor(target.contentSecondary, "contentSecondary")
-    val accent by animateThemeColor(target.accent, "accent")
-    val onAccent by animateThemeColor(target.onAccent, "onAccent")
+    val contentTop by animateContentColor(target.contentTop)
+    val contentBottom by animateContentColor(target.contentBottom)
+    val contentSecondary by animateContentColor(target.contentSecondary)
+    val accent by animateContentColor(target.accent)
+    val onAccent by animateContentColor(target.onAccent)
+    val surface by animateColorAsState(
+        targetValue = target.surface,
+        animationSpec = tween(THEME_TRANSITION_MILLIS),
+        label = "surface"
+    )
 
     return target.copy(
         contentTop = contentTop,
         contentBottom = contentBottom,
         contentSecondary = contentSecondary,
         accent = accent,
-        onAccent = onAccent
+        onAccent = onAccent,
+        surface = surface
     )
 }
 
 @Composable
-private fun animateThemeColor(target: Color, label: String) =
-    animateColorAsState(
-        targetValue = target,
-        animationSpec = tween(THEME_TRANSITION_MILLIS),
-        label = label
-    )
+private fun animateContentColor(target: Color): State<Color> {
+    val animatable = remember { Animatable(target) }
+
+    LaunchedEffect(target) {
+        if (animatable.value == target) return@LaunchedEffect
+        val halfDuration = THEME_TRANSITION_MILLIS / 2
+        animatable.animateTo(animatable.value.copy(alpha = 0f), tween(halfDuration))
+        animatable.snapTo(target.copy(alpha = 0f))
+        animatable.animateTo(target, tween(halfDuration))
+    }
+
+    return animatable.asState()
+}
 
 object CoupleCounterTheme {
     val palette: ThemePalette

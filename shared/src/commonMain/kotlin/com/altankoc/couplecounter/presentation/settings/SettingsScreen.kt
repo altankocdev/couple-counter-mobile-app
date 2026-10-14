@@ -124,7 +124,7 @@ fun SettingsScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(PanelShape)
-                .background(palette.gradientStops.last().second.copy(alpha = 0.92f))
+                .background(palette.surface.copy(alpha = 0.92f))
                 .verticalScroll(rememberScrollState())
                 .padding(top = 28.dp)
         ) {

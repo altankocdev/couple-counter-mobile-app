@@ -91,6 +91,15 @@ fun ElapsedScreen(
             color = palette.contentTop
         )
 
+        Spacer(Modifier.height(6.dp))
+
+        Text(
+            text = "birlikteyiz",
+            style = typography.titleMedium.copy(letterSpacing = 3.sp),
+            fontWeight = FontWeight.Light,
+            color = palette.contentTop.copy(alpha = 0.8f)
+        )
+
         Spacer(Modifier.weight(1f))
 
         if (uiState is ElapsedUiState.Content) {

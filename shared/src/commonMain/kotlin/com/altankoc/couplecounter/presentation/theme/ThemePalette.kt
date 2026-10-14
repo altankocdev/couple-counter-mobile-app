@@ -14,6 +14,7 @@ data class ThemePalette(
     val contentSecondary: Color,
     val accent: Color,
     val onAccent: Color,
+    val surface: Color,
     val isTopLight: Boolean,
     val isBottomLight: Boolean
 )

@@ -68,7 +68,7 @@ fun AppDatePickerDialog(
 @Composable
 private fun appDatePickerColors(): DatePickerColors {
     val palette = CoupleCounterTheme.palette
-    val container = palette.gradientStops.last().second
+    val container = palette.surface
     return DatePickerDefaults.colors(
         containerColor = container,
         titleContentColor = palette.contentSecondary,
