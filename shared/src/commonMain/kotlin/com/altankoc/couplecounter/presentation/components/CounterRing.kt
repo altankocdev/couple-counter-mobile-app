@@ -1,8 +1,10 @@
 package com.altankoc.couplecounter.presentation.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -11,6 +13,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -36,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -46,12 +51,19 @@ import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import kotlinx.coroutines.launch
 
+internal const val COUNTER_CHANGE_OUT_MILLIS = 220
+internal const val COUNTER_CHANGE_IN_MILLIS = 520
+internal const val COUNTER_CHANGE_IN_DELAY_MILLIS = 120
+
 private const val RING_GAP_DEGREES = 28f
 private const val RING_WIDTH_FRACTION = 0.64f
 private const val UNIT_SIZE_FRACTION = 0.20f
-private const val PRESSED_SCALE = 0.94f
-private const val RIPPLE_EXPANSION = 0.18f
-private const val RIPPLE_MILLIS = 650
+private const val PRESSED_SCALE = 0.93f
+private const val GLOW_MILLIS = 800
+private const val GLOW_MAX_ALPHA = 0.32f
+private const val HALO_MAX_ALPHA = 0.5f
+private const val HALO_EXPANSION = 0.16f
+private const val TEXT_SLIDE_DIVISOR = 5
 private val MaxRingSize = 280.dp
 private val HeartSize = 14.dp
 
@@ -74,12 +86,12 @@ fun CounterRing(
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "ringPressScale"
     )
-    val ripple = remember { Animatable(1f) }
+    val glow = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
 
     BoxWithConstraints(
@@ -97,7 +109,7 @@ fun CounterRing(
                 palette.contentSecondary
             )
         )
-        val rippleColor = palette.contentBottom
+        val glowColor = palette.contentBottom
 
         val clickModifier = if (onClick != null) {
             Modifier.clickable(
@@ -106,8 +118,8 @@ fun CounterRing(
                 onClickLabel = onClickLabel
             ) {
                 scope.launch {
-                    ripple.snapTo(0f)
-                    ripple.animateTo(1f, tween(RIPPLE_MILLIS, easing = FastOutSlowInEasing))
+                    glow.snapTo(0f)
+                    glow.animateTo(1f, tween(GLOW_MILLIS, easing = LinearOutSlowInEasing))
                 }
                 onClick()
             }
@@ -128,6 +140,30 @@ fun CounterRing(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 1.5.dp.toPx()
                 val inset = strokeWidth / 2
+                val baseRadius = size.minDimension / 2f - inset
+                val glowProgress = glow.value
+
+                if (glowProgress < 1f) {
+                    val fade = 1f - glowProgress
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                glowColor.copy(alpha = GLOW_MAX_ALPHA * fade),
+                                Color.Transparent
+                            ),
+                            center = center,
+                            radius = baseRadius
+                        ),
+                        radius = baseRadius,
+                        center = center
+                    )
+                    drawCircle(
+                        color = glowColor.copy(alpha = HALO_MAX_ALPHA * fade),
+                        radius = baseRadius * (1f + HALO_EXPANSION * glowProgress),
+                        style = Stroke(width = strokeWidth)
+                    )
+                }
+
                 drawArc(
                     brush = ringBrush,
                     startAngle = 90f + RING_GAP_DEGREES / 2,
@@ -137,25 +173,41 @@ fun CounterRing(
                     size = Size(size.width - strokeWidth, size.height - strokeWidth),
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
-
-                val rippleProgress = ripple.value
-                if (rippleProgress < 1f) {
-                    val baseRadius = size.minDimension / 2f - inset
-                    drawCircle(
-                        color = rippleColor.copy(alpha = (1f - rippleProgress) * 0.5f),
-                        radius = baseRadius * (1f + RIPPLE_EXPANSION * rippleProgress),
-                        style = Stroke(width = strokeWidth)
-                    )
-                }
             }
 
             AnimatedContent(
                 targetState = RingText(value, unit),
                 transitionSpec = {
-                    (fadeIn(tween(durationMillis = 450, delayMillis = 100)) +
-                            scaleIn(tween(durationMillis = 450, delayMillis = 100), initialScale = 0.9f)) togetherWith
-                            (fadeOut(tween(durationMillis = 200)) +
-                                    scaleOut(tween(durationMillis = 200), targetScale = 1.1f))
+                    val inSpec = tween<Float>(
+                        durationMillis = COUNTER_CHANGE_IN_MILLIS,
+                        delayMillis = COUNTER_CHANGE_IN_DELAY_MILLIS,
+                        easing = FastOutSlowInEasing
+                    )
+                    val outSpec = tween<Float>(
+                        durationMillis = COUNTER_CHANGE_OUT_MILLIS,
+                        easing = FastOutSlowInEasing
+                    )
+
+                    val enter = fadeIn(inSpec) +
+                            scaleIn(inSpec, initialScale = 0.85f) +
+                            slideInVertically(
+                                tween(
+                                    durationMillis = COUNTER_CHANGE_IN_MILLIS,
+                                    delayMillis = COUNTER_CHANGE_IN_DELAY_MILLIS,
+                                    easing = FastOutSlowInEasing
+                                )
+                            ) { height -> height / TEXT_SLIDE_DIVISOR }
+
+                    val exit = fadeOut(outSpec) +
+                            scaleOut(outSpec, targetScale = 1.08f) +
+                            slideOutVertically(
+                                tween(
+                                    durationMillis = COUNTER_CHANGE_OUT_MILLIS,
+                                    easing = FastOutSlowInEasing
+                                )
+                            ) { height -> -height / TEXT_SLIDE_DIVISOR }
+
+                    enter togetherWith exit using SizeTransform(clip = false)
                 },
                 label = "counterRingText"
             ) { text ->
