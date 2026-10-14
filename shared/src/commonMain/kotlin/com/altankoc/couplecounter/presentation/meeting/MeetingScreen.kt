@@ -255,7 +255,7 @@ private fun MeetingFooter(
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(
                 containerColor = palette.accent,
-                contentColor = palette.contentBottom
+                contentColor = palette.onAccent
             ),
             modifier = Modifier
                 .widthIn(min = 180.dp)

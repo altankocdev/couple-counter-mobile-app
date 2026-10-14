@@ -33,7 +33,7 @@ fun CoupleCounterTheme(
 
     val colorScheme = darkColorScheme(
         primary = animatedPalette.accent,
-        onPrimary = animatedPalette.contentBottom,
+        onPrimary = animatedPalette.onAccent,
         background = palette.gradientStops.last().second,
         onBackground = animatedPalette.contentBottom,
         surface = palette.gradientStops.last().second,
@@ -58,12 +58,14 @@ private fun animatePalette(target: ThemePalette): ThemePalette {
     val contentBottom by animateThemeColor(target.contentBottom, "contentBottom")
     val contentSecondary by animateThemeColor(target.contentSecondary, "contentSecondary")
     val accent by animateThemeColor(target.accent, "accent")
+    val onAccent by animateThemeColor(target.onAccent, "onAccent")
 
     return target.copy(
         contentTop = contentTop,
         contentBottom = contentBottom,
         contentSecondary = contentSecondary,
-        accent = accent
+        accent = accent,
+        onAccent = onAccent
     )
 }
 
