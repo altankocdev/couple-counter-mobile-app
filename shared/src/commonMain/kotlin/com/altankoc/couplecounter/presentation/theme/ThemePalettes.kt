@@ -20,6 +20,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFD4C4A8),
         accent = Color(0xFF778D7A),
         onAccent = Color(0xFFF4F1DE),
+        surface = Color(0xFF0D1B2A),
         isTopLight = true,
         isBottomLight = false
     )
@@ -40,6 +41,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFDFB6B2),
         accent = Color(0xFF854F6C),
         onAccent = Color(0xFFFBE4D8),
+        surface = Color(0xFF190019),
         isTopLight = true,
         isBottomLight = false
     )
@@ -60,6 +62,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFC9C1BE),
         accent = Color(0xFF9A8FA0),
         onAccent = Color(0xFF0F0D14),
+        surface = Color(0xFF0F0D14),
         isTopLight = true,
         isBottomLight = false
     )
@@ -79,6 +82,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFF3C6B6),
         accent = Color(0xFFC86A5A),
         onAccent = Color(0xFFFDEDE7),
+        surface = Color(0xFF4B1D27),
         isTopLight = true,
         isBottomLight = false
     )
@@ -88,19 +92,20 @@ object ThemePalettes {
         name = "Aurora",
         gradientStops = listOf(
             0.00f to Color(0xFF4C1D3D),
-            0.20f to Color(0xFF852E4E),
-            0.40f to Color(0xFFA33757),
-            0.62f to Color(0xFFDC586D),
-            0.82f to Color(0xFFFB9590),
-            1.00f to Color(0xFFFFBB94)
+            0.22f to Color(0xFF852E4E),
+            0.45f to Color(0xFFA33757),
+            0.70f to Color(0xFFC9506A),
+            0.88f to Color(0xFFE07278),
+            1.00f to Color(0xFFF08F86)
         ),
-        contentTop = Color(0xFFFFBB94),
-        contentBottom = Color(0xFF4C1D3D),
-        contentSecondary = Color(0xFF852E4E),
-        accent = Color(0xFFA33757),
-        onAccent = Color(0xFFFFE8DC),
+        contentTop = Color(0xFFFFE8DC),
+        contentBottom = Color(0xFFFFF1EA),
+        contentSecondary = Color(0xFFFFCFB0),
+        accent = Color(0xFFFFBB94),
+        onAccent = Color(0xFF4C1D3D),
+        surface = Color(0xFF4C1D3D),
         isTopLight = false,
-        isBottomLight = true
+        isBottomLight = false
     )
 
     val Wisteria = ThemePalette(
@@ -119,6 +124,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFDCD3E0),
         accent = Color(0xFF8A82A6),
         onAccent = Color(0xFFF4EFF3),
+        surface = Color(0xFF3A3550),
         isTopLight = true,
         isBottomLight = false
     )
@@ -139,6 +145,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFFDA481),
         accent = Color(0xFFD9485A),
         onAccent = Color(0xFFFFF1EA),
+        surface = Color(0xFF242E49),
         isTopLight = false,
         isBottomLight = false
     )
@@ -158,6 +165,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFFE07A94),
         accent = Color(0xFFCC5671),
         onAccent = Color(0xFFFFF0F3),
+        surface = Color(0xFF2A0A12),
         isTopLight = false,
         isBottomLight = false
     )
@@ -178,6 +186,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFF0C6478),
         accent = Color(0xFF15919B),
         onAccent = Color(0xFFFFFFFF),
+        surface = Color(0xFF80EE98),
         isTopLight = false,
         isBottomLight = true
     )
@@ -194,11 +203,12 @@ object ThemePalettes {
             0.88f to Color(0xFFE6BAA9),
             1.00f to Color(0xFFF0D6C2)
         ),
-        contentTop = Color(0xFF1F5C63),
-        contentBottom = Color(0xFF173F45),
-        contentSecondary = Color(0xFF3C7D8C),
+        contentTop = Color(0xFF4A3F6B),
+        contentBottom = Color(0xFF4A3F6B),
+        contentSecondary = Color(0xFF8C6E9E),
         accent = Color(0xFF6A5BA8),
         onAccent = Color(0xFFFFFFFF),
+        surface = Color(0xFFF0D6C2),
         isTopLight = true,
         isBottomLight = true
     )
@@ -218,6 +228,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFF6B66B0),
         accent = Color(0xFF8A6FD6),
         onAccent = Color(0xFFFFFFFF),
+        surface = Color(0xFFBDCFFF),
         isTopLight = true,
         isBottomLight = true
     )
@@ -237,6 +248,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFF5E5E5E),
         accent = Color(0xFF4A4A4A),
         onAccent = Color(0xFFF4F4F4),
+        surface = Color(0xFFF4F4F4),
         isTopLight = false,
         isBottomLight = true
     )
@@ -257,6 +269,7 @@ object ThemePalettes {
         contentSecondary = Color(0xFF9CC4E8),
         accent = Color(0xFF7DA0CA),
         onAccent = Color(0xFF052659),
+        surface = Color(0xFF021024),
         isTopLight = true,
         isBottomLight = false
     )
