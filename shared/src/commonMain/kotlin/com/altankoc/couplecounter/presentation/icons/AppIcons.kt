@@ -31,27 +31,6 @@ object AppIcons {
         }
     }
 
-    val Settings: ImageVector by lazy {
-        buildIcon(name = "Settings", filled = false) {
-            moveTo(4f, 7f)
-            lineTo(7f, 7f)
-            moveTo(11f, 7f)
-            lineTo(20f, 7f)
-            moveTo(7f, 7f)
-            arcToRelative(2f, 2f, 0f, true, true, 4f, 0f)
-            arcToRelative(2f, 2f, 0f, true, true, -4f, 0f)
-            moveTo(4f, 17f)
-            lineTo(13f, 17f)
-            moveTo(17f, 17f)
-            lineTo(20f, 17f)
-            moveTo(13f, 17f)
-            arcToRelative(2f, 2f, 0f, true, true, 4f, 0f)
-            arcToRelative(2f, 2f, 0f, true, true, -4f, 0f)
-        }
-    }
-
-
-
     val Hourglass: ImageVector by lazy {
         buildIcon(name = "Hourglass", filled = false) {
             moveTo(7f, 3f)
@@ -71,6 +50,40 @@ object AppIcons {
         }
     }
 
+    val Bell: ImageVector by lazy {
+        buildIcon(name = "Bell", filled = false) {
+            moveTo(6f, 17f)
+            lineTo(18f, 17f)
+            moveTo(7f, 17f)
+            lineTo(7f, 11f)
+            arcToRelative(5f, 5f, 0f, false, true, 10f, 0f)
+            lineTo(17f, 17f)
+            moveTo(12f, 4f)
+            lineTo(12f, 6f)
+            moveTo(10f, 20f)
+            quadTo(12f, 22f, 14f, 20f)
+        }
+    }
+
+    val Settings: ImageVector by lazy {
+        buildIcon(name = "Settings", filled = false) {
+            moveTo(4f, 7f)
+            lineTo(7f, 7f)
+            moveTo(11f, 7f)
+            lineTo(20f, 7f)
+            moveTo(7f, 7f)
+            arcToRelative(2f, 2f, 0f, true, true, 4f, 0f)
+            arcToRelative(2f, 2f, 0f, true, true, -4f, 0f)
+            moveTo(4f, 17f)
+            lineTo(13f, 17f)
+            moveTo(17f, 17f)
+            lineTo(20f, 17f)
+            moveTo(13f, 17f)
+            arcToRelative(2f, 2f, 0f, true, true, 4f, 0f)
+            arcToRelative(2f, 2f, 0f, true, true, -4f, 0f)
+        }
+    }
+
     val ChevronLeft: ImageVector by lazy {
         buildIcon(name = "ChevronLeft", filled = false) {
             moveTo(15f, 6f)
@@ -79,8 +92,6 @@ object AppIcons {
         }
     }
 }
-
-
 
 private fun buildIcon(
     name: String,

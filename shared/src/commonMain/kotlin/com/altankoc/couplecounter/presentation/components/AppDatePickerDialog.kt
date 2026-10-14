@@ -66,29 +66,14 @@ fun AppDatePickerDialog(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    val fallbackDate = remember { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
-    val anchorYear = (initialDate ?: maxDate ?: minDate ?: fallbackDate).year
-    val minYear = minDate?.year ?: (anchorYear - YEARS_BACK)
-    val maxYear = maxDate?.year ?: (anchorYear + YEARS_FORWARD)
-    val years = remember(minYear, maxYear) { (minYear..maxYear).toList() }
-
     var selected by remember {
-        mutableStateOf(
-            (initialDate ?: maxDate ?: minDate ?: fallbackDate).coerceWithin(minDate, maxDate)
-        )
-    }
-
-    fun resolve(year: Int, month: Int, day: Int): LocalDate {
-        val safeDay = minOf(day, daysInMonth(year, month))
-        return LocalDate(year, month, safeDay).coerceWithin(minDate, maxDate)
+        val fallback = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        mutableStateOf((initialDate ?: maxDate ?: minDate ?: fallback).coerceWithin(minDate, maxDate))
     }
 
     fun dismissThen(action: () -> Unit) {
         scope.launch { sheetState.hide() }.invokeOnCompletion { action() }
     }
-
-    val selectedMonth = selected.month.ordinal + 1
-    val dayCount = daysInMonth(selected.year, selectedMonth)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -111,57 +96,13 @@ fun AppDatePickerDialog(
 
             Spacer(Modifier.height(16.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(WheelItemHeight * WHEEL_VISIBLE_ITEMS),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(WheelItemHeight)
-                        .clip(SelectionShape)
-                        .background(palette.contentBottom.copy(alpha = 0.06f))
-                        .border(1.dp, palette.contentBottom.copy(alpha = 0.12f), SelectionShape)
-                )
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    WheelPicker(
-                        items = (1..dayCount).map { it.toString() },
-                        selectedIndex = selected.day - 1,
-                        onSelectedIndexChange = { index ->
-                            selected = resolve(selected.year, selectedMonth, index + 1)
-                        },
-                        isItemEnabled = { index ->
-                            LocalDate(selected.year, selectedMonth, index + 1).isWithin(minDate, maxDate)
-                        },
-                        modifier = Modifier.weight(0.8f)
-                    )
-                    WheelPicker(
-                        items = TurkishMonthNames,
-                        selectedIndex = selected.month.ordinal,
-                        onSelectedIndexChange = { index ->
-                            selected = resolve(selected.year, index + 1, selected.day)
-                        },
-                        isItemEnabled = { index ->
-                            isMonthWithin(selected.year, index + 1, minDate, maxDate)
-                        },
-                        modifier = Modifier.weight(1.6f)
-                    )
-                    WheelPicker(
-                        items = years.map { it.toString() },
-                        selectedIndex = selected.year - minYear,
-                        onSelectedIndexChange = { index ->
-                            selected = resolve(years[index], selectedMonth, selected.day)
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                EdgeFade(color = palette.surface, modifier = Modifier.align(Alignment.TopCenter), fromTop = true)
-                EdgeFade(color = palette.surface, modifier = Modifier.align(Alignment.BottomCenter), fromTop = false)
-            }
+            DateWheel(
+                selected = selected,
+                onSelectedChange = { selected = it },
+                minDate = minDate,
+                maxDate = maxDate,
+                edgeFadeColor = palette.surface
+            )
 
             Spacer(Modifier.height(24.dp))
 
@@ -205,6 +146,85 @@ fun AppDatePickerDialog(
 
             Spacer(Modifier.height(16.dp))
             Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+        }
+    }
+}
+
+@Composable
+internal fun DateWheel(
+    selected: LocalDate,
+    onSelectedChange: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+    minDate: LocalDate? = null,
+    maxDate: LocalDate? = null,
+    edgeFadeColor: Color? = null
+) {
+    val palette = CoupleCounterTheme.palette
+
+    val anchorYear = (maxDate ?: minDate ?: selected).year
+    val minYear = minDate?.year ?: (anchorYear - YEARS_BACK)
+    val maxYear = maxDate?.year ?: (anchorYear + YEARS_FORWARD)
+    val years = remember(minYear, maxYear) { (minYear..maxYear).toList() }
+
+    val selectedMonth = selected.month.ordinal + 1
+    val dayCount = daysInMonth(selected.year, selectedMonth)
+
+    fun resolve(year: Int, month: Int, day: Int): LocalDate {
+        val safeDay = minOf(day, daysInMonth(year, month))
+        return LocalDate(year, month, safeDay).coerceWithin(minDate, maxDate)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(WheelItemHeight * WHEEL_VISIBLE_ITEMS),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(WheelItemHeight)
+                .clip(SelectionShape)
+                .background(palette.contentBottom.copy(alpha = 0.08f))
+                .border(1.dp, palette.contentBottom.copy(alpha = 0.14f), SelectionShape)
+        )
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            WheelPicker(
+                items = (1..dayCount).map { it.toString() },
+                selectedIndex = selected.day - 1,
+                onSelectedIndexChange = { index ->
+                    onSelectedChange(resolve(selected.year, selectedMonth, index + 1))
+                },
+                isItemEnabled = { index ->
+                    LocalDate(selected.year, selectedMonth, index + 1).isWithin(minDate, maxDate)
+                },
+                modifier = Modifier.weight(0.8f)
+            )
+            WheelPicker(
+                items = TurkishMonthNames,
+                selectedIndex = selected.month.ordinal,
+                onSelectedIndexChange = { index ->
+                    onSelectedChange(resolve(selected.year, index + 1, selected.day))
+                },
+                isItemEnabled = { index ->
+                    isMonthWithin(selected.year, index + 1, minDate, maxDate)
+                },
+                modifier = Modifier.weight(1.6f)
+            )
+            WheelPicker(
+                items = years.map { it.toString() },
+                selectedIndex = selected.year - minYear,
+                onSelectedIndexChange = { index ->
+                    onSelectedChange(resolve(years[index], selectedMonth, selected.day))
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        if (edgeFadeColor != null) {
+            EdgeFade(color = edgeFadeColor, modifier = Modifier.align(Alignment.TopCenter), fromTop = true)
+            EdgeFade(color = edgeFadeColor, modifier = Modifier.align(Alignment.BottomCenter), fromTop = false)
         }
     }
 }

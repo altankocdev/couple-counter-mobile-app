@@ -24,7 +24,9 @@ class OnboardingViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
-        OnboardingUiState(maxSelectableDate = clock.todayIn(timeZone))
+        clock.todayIn(timeZone).let { today ->
+            OnboardingUiState(maxSelectableDate = today, selectedDate = today)
+        }
     )
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
