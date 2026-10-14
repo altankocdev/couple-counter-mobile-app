@@ -29,12 +29,9 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.altankoc.couplecounter.presentation.components.HeartHourglass
+import com.altankoc.couplecounter.presentation.meeting.MeetingRoot
 
 private const val PAGE_COUNT = 2
 private const val ELAPSED_PAGE = 0
@@ -54,7 +51,7 @@ fun HomeScreen(
         ) { page ->
             when (page) {
                 ELAPSED_PAGE -> ElapsedRoot()
-                else -> MeetingPlaceholder()
+                else -> MeetingRoot()
             }
         }
 
