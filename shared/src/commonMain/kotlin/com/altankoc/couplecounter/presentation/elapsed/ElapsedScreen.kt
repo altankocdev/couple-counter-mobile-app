@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.presentation.components.CounterRing
+import com.altankoc.couplecounter.presentation.components.FooterLabel
 import com.altankoc.couplecounter.presentation.components.LineFramed
+import com.altankoc.couplecounter.presentation.components.ScreenFooter
 import com.altankoc.couplecounter.presentation.components.TimeUnitCard
 import com.altankoc.couplecounter.presentation.format.label
 import com.altankoc.couplecounter.presentation.format.toTwoDigits
@@ -99,13 +102,15 @@ fun ElapsedScreen(
 
         Spacer(Modifier.weight(1f))
 
-        if (uiState is ElapsedUiState.Content) {
-            AnimatedVisibility(
-                visible = uiState.showsTotalDays,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                TotalDays(totalDays = uiState.breakdown.totalDays)
+        ScreenFooter {
+            if (uiState is ElapsedUiState.Content) {
+                AnimatedVisibility(
+                    visible = uiState.showsTotalDays,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    FooterLabel(text = totalDaysText(uiState.breakdown.totalDays))
+                }
             }
         }
 
@@ -187,20 +192,18 @@ private fun CounterSection(
 }
 
 @Composable
-private fun TotalDays(totalDays: Long) {
+private fun totalDaysText(totalDays: Long): AnnotatedString {
     val palette = CoupleCounterTheme.palette
-    LineFramed(lineColor = palette.contentSecondary.copy(alpha = 0.35f)) {
-        Text(
-            text = buildAnnotatedString {
-                append("toplam ")
-                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = palette.contentBottom)) {
-                    append(totalDays.toString())
-                }
-                append(" gün")
-            },
-            style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 2.sp),
-            color = palette.contentSecondary
-        )
+    return buildAnnotatedString {
+        withStyle(SpanStyle(color = palette.contentSecondary)) {
+            append("toplam ")
+        }
+        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
+            append(totalDays.toString())
+        }
+        withStyle(SpanStyle(color = palette.contentSecondary)) {
+            append(" gün")
+        }
     }
 }
 

@@ -19,3 +19,13 @@ internal fun LocalDate.toUtcEpochMillis(): Long =
 
 internal fun Long.toLocalDateFromUtcMillis(): LocalDate =
     Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
+
+private val TurkishWeekdayNames = listOf(
+    "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"
+)
+
+internal fun LocalDate.toMeetingDisplayText(currentYear: Int): String {
+    val dayAndMonth = "$day ${TurkishMonthNames[month.ordinal]}"
+    val withYear = if (year == currentYear) dayAndMonth else "$dayAndMonth $year"
+    return "$withYear ${TurkishWeekdayNames[dayOfWeek.ordinal]}"
+}
