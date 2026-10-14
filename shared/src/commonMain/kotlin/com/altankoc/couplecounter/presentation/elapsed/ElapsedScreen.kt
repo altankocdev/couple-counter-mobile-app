@@ -2,6 +2,7 @@ package com.altankoc.couplecounter.presentation.elapsed
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,6 +36,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.altankoc.couplecounter.presentation.components.COUNTER_CHANGE_IN_DELAY_MILLIS
+import com.altankoc.couplecounter.presentation.components.COUNTER_CHANGE_IN_MILLIS
+import com.altankoc.couplecounter.presentation.components.COUNTER_CHANGE_OUT_MILLIS
 import com.altankoc.couplecounter.presentation.components.CounterRing
 import com.altankoc.couplecounter.presentation.components.FooterLabel
 import com.altankoc.couplecounter.presentation.components.LineFramed
@@ -146,7 +150,10 @@ private fun CounterSection(
 
         AnimatedContent(
             targetState = secondary,
-            transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(200)) },
+            transitionSpec = {
+                fadeIn(tween(COUNTER_CHANGE_IN_MILLIS, COUNTER_CHANGE_IN_DELAY_MILLIS, FastOutSlowInEasing)) togetherWith
+                        fadeOut(tween(COUNTER_CHANGE_OUT_MILLIS, easing = FastOutSlowInEasing))
+            },
             label = "secondaryUnits"
         ) { items ->
             if (items.isNotEmpty()) {
