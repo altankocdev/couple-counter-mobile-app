@@ -40,7 +40,11 @@ fun App() {
 
 @Composable
 private fun ReadyContent(state: AppUiState.Ready) {
-    val palette = ThemePalettes.byId(state.themeId)
+    val palette = if (state.hasRelationshipStartDate) {
+        ThemePalettes.byId(state.themeId)
+    } else {
+        ThemePalettes.Onboarding
+    }
     val startDestination: Any = remember {
         if (state.hasRelationshipStartDate) HomeRoute else OnboardingRoute
     }

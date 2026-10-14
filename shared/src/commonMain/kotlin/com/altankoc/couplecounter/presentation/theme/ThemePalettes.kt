@@ -143,8 +143,8 @@ object ThemePalettes {
         contentTop = Color(0xFFFFE7DA),
         contentBottom = Color(0xFFFFE7DA),
         contentSecondary = Color(0xFFFDA481),
-        accent = Color(0xFFD9485A),
-        onAccent = Color(0xFFFFF1EA),
+        accent = Color(0xFFFFC9A8),
+        onAccent = Color(0xFF242E49),
         surface = Color(0xFF242E49),
         isTopLight = false,
         isBottomLight = false
@@ -163,8 +163,8 @@ object ThemePalettes {
         contentTop = Color(0xFFF7D6DC),
         contentBottom = Color(0xFFF7D6DC),
         contentSecondary = Color(0xFFE07A94),
-        accent = Color(0xFFCC5671),
-        onAccent = Color(0xFFFFF0F3),
+        accent = Color(0xFFFFC2CF),
+        onAccent = Color(0xFF4B0F1E),
         surface = Color(0xFF2A0A12),
         isTopLight = false,
         isBottomLight = false
@@ -274,7 +274,8 @@ object ThemePalettes {
         isBottomLight = false
     )
 
-    val Default = Nocturne
+    val Default = Terracotta
+    val Onboarding = Terracotta
 
     val all: List<ThemePalette> = listOf(
         Nocturne,

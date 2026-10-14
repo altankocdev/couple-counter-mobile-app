@@ -1,5 +1,7 @@
 package com.altankoc.couplecounter.presentation.navigation
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -16,6 +18,9 @@ import com.altankoc.couplecounter.presentation.onboarding.OnboardingRoot
 import com.altankoc.couplecounter.presentation.settings.SettingsRoot
 
 private const val PARALLAX_DIVISOR = 4
+private const val ONBOARDING_EXIT_MILLIS = 700
+private const val HOME_ENTER_MILLIS = 1_000
+private const val HOME_ENTER_DELAY_MILLIS = 300
 
 @Composable
 fun AppNavHost(
@@ -30,7 +35,11 @@ fun AppNavHost(
         enterTransition = { fadeIn() },
         exitTransition = { fadeOut() }
     ) {
-        composable<OnboardingRoute> {
+        composable<OnboardingRoute>(
+            exitTransition = {
+                fadeOut(tween(ONBOARDING_EXIT_MILLIS, easing = FastOutSlowInEasing))
+            }
+        ) {
             OnboardingRoot(
                 onCompleted = {
                     navController.navigate(HomeRoute) {
@@ -41,6 +50,13 @@ fun AppNavHost(
         }
 
         composable<HomeRoute>(
+            enterTransition = {
+                if (initialState.destination.hasRoute<OnboardingRoute>()) {
+                    fadeIn(tween(HOME_ENTER_MILLIS, HOME_ENTER_DELAY_MILLIS, FastOutSlowInEasing))
+                } else {
+                    fadeIn()
+                }
+            },
             exitTransition = {
                 if (targetState.destination.hasRoute<SettingsRoute>()) {
                     slideOutHorizontally { width -> -width / PARALLAX_DIVISOR } + fadeOut()
