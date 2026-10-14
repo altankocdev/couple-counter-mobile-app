@@ -134,7 +134,7 @@ fun OnboardingScreen(
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = palette.accent,
-                contentColor = palette.contentBottom,
+                contentColor = palette.onAccent,
                 disabledContainerColor = palette.contentBottom.copy(alpha = 0.12f),
                 disabledContentColor = palette.contentBottom.copy(alpha = 0.38f)
             ),
