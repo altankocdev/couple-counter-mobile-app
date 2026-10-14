@@ -50,13 +50,7 @@ object AppIcons {
         }
     }
 
-    val ChevronDown: ImageVector by lazy {
-        buildIcon(name = "ChevronDown", filled = false) {
-            moveTo(6f, 9f)
-            lineTo(12f, 15f)
-            lineTo(18f, 9f)
-        }
-    }
+
 
     val Hourglass: ImageVector by lazy {
         buildIcon(name = "Hourglass", filled = false) {
@@ -76,7 +70,17 @@ object AppIcons {
             lineTo(16f, 21f)
         }
     }
+
+    val ChevronLeft: ImageVector by lazy {
+        buildIcon(name = "ChevronLeft", filled = false) {
+            moveTo(15f, 6f)
+            lineTo(9f, 12f)
+            lineTo(15f, 18f)
+        }
+    }
 }
+
+
 
 private fun buildIcon(
     name: String,
