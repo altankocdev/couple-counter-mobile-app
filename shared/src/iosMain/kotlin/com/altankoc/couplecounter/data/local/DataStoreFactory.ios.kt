@@ -20,6 +20,6 @@ internal fun createDataStore(): DataStore<Preferences> =
                 error = null
             )
             requireNotNull(documentDirectory?.path) { "Documents directory not found." } +
-                    "/$DATA_STORE_FILE_NAME"
+                    "/${DATA_STORE_FILE_NAME}"
         }
     )

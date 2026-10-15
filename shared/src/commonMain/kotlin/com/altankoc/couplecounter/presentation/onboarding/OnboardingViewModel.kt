@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.altankoc.couplecounter.domain.model.RelationshipRules
 import com.altankoc.couplecounter.domain.model.SaveDateResult
+import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,7 @@ import kotlin.time.Clock
 
 class OnboardingViewModel(
     private val setRelationshipStartDate: SetRelationshipStartDateUseCase,
+    private val rescheduleReminders: RescheduleRemindersUseCase,
     clock: Clock,
     timeZone: TimeZone
 ) : ViewModel() {
@@ -46,7 +48,10 @@ class OnboardingViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
             when (setRelationshipStartDate(date)) {
-                SaveDateResult.Success -> _events.send(OnboardingEvent.Completed)
+                SaveDateResult.Success -> {
+                    rescheduleReminders()
+                    _events.send(OnboardingEvent.Completed)
+                }
                 SaveDateResult.FutureDateNotAllowed,
                 SaveDateResult.PastDateNotAllowed -> _uiState.update {
                     it.copy(isSaving = false, error = OnboardingError.InvalidDate)

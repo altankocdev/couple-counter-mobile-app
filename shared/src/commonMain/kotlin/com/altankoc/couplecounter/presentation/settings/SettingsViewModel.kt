@@ -2,13 +2,21 @@ package com.altankoc.couplecounter.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.altankoc.couplecounter.domain.model.NotificationPreferences
+import com.altankoc.couplecounter.domain.model.SaveDateResult
 import com.altankoc.couplecounter.domain.model.ThemeId
+import com.altankoc.couplecounter.domain.repository.NotificationPermissionProvider
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
+import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -20,24 +28,64 @@ class SettingsViewModel(
     relationshipRepository: RelationshipRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val setRelationshipStartDate: SetRelationshipStartDateUseCase,
+    private val notificationPermissionProvider: NotificationPermissionProvider,
+    private val rescheduleReminders: RescheduleRemindersUseCase,
     private val clock: Clock,
     private val timeZone: TimeZone
 ) : ViewModel() {
 
+    private val isPermissionGranted = MutableStateFlow(false)
+
+    private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
+    val events: Flow<SettingsEvent> = _events.receiveAsFlow()
+
     val uiState: StateFlow<SettingsUiState> = combine(
         relationshipRepository.relationshipStartDate,
-        userPreferencesRepository.themeId
-    ) { startDate, themeId ->
+        userPreferencesRepository.themeId,
+        userPreferencesRepository.notificationPreferences,
+        isPermissionGranted
+    ) { startDate, themeId, notificationPreferences, permissionGranted ->
         SettingsUiState(
             today = clock.todayIn(timeZone),
             relationshipStartDate = startDate,
-            selectedThemeId = themeId
+            selectedThemeId = themeId,
+            isNotificationPermissionGranted = permissionGranted,
+            notificationPreferences = notificationPreferences
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = SettingsUiState(today = clock.todayIn(timeZone))
     )
+
+    init {
+        refreshNotificationPermission()
+    }
+
+    fun refreshNotificationPermission() {
+        viewModelScope.launch {
+            isPermissionGranted.value = notificationPermissionProvider.isGranted()
+        }
+    }
+
+    fun onNotificationPermissionResult(granted: Boolean) {
+        viewModelScope.launch {
+            val isGranted = granted && notificationPermissionProvider.isGranted()
+            isPermissionGranted.value = isGranted
+            if (isGranted) {
+                rescheduleReminders()
+            } else {
+                _events.send(SettingsEvent.NotificationPermissionDenied)
+            }
+        }
+    }
+
+    fun onNotificationPreferencesChanged(preferences: NotificationPreferences) {
+        viewModelScope.launch {
+            userPreferencesRepository.setNotificationPreferences(preferences)
+            rescheduleReminders()
+        }
+    }
 
     fun onThemeSelected(themeId: ThemeId) {
         viewModelScope.launch {
@@ -47,7 +95,9 @@ class SettingsViewModel(
 
     fun onRelationshipStartDateSelected(date: LocalDate) {
         viewModelScope.launch {
-            setRelationshipStartDate(date)
+            if (setRelationshipStartDate(date) == SaveDateResult.Success) {
+                rescheduleReminders()
+            }
         }
     }
 
