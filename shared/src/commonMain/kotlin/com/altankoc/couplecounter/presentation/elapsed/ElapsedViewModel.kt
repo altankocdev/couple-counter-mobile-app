@@ -2,6 +2,7 @@ package com.altankoc.couplecounter.presentation.elapsed
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.altankoc.couplecounter.domain.model.CounterFormat
 import com.altankoc.couplecounter.domain.model.ElapsedTime
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
@@ -11,6 +12,7 @@ import com.altankoc.couplecounter.domain.usecase.GetNextCounterFormatUseCase
 import com.altankoc.couplecounter.domain.usecase.ResolveCounterFormatUseCase
 import com.altankoc.couplecounter.presentation.common.secondTicker
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,6 +30,8 @@ class ElapsedViewModel(
     clock: Clock
 ) : ViewModel() {
 
+    private val selectedFormat = MutableStateFlow<CounterFormat?>(null)
+
     private val elapsedTime: Flow<ElapsedTime?> = combine(
         relationshipRepository.relationshipStartDate,
         secondTicker(clock)
@@ -37,16 +41,18 @@ class ElapsedViewModel(
 
     val uiState: StateFlow<ElapsedUiState> = combine(
         elapsedTime,
-        userPreferencesRepository.counterFormat
-    ) { elapsed, savedFormat ->
+        userPreferencesRepository.counterFormat,
+        selectedFormat
+    ) { elapsed, savedFormat, localFormat ->
         if (elapsed == null) {
             ElapsedUiState.Loading
         } else {
-            val format = resolveCounterFormat(savedFormat, elapsed)
+            val format = resolveCounterFormat(localFormat ?: savedFormat, elapsed)
             ElapsedUiState.Content(
                 elapsed = elapsed,
                 format = format,
-                breakdown = formatElapsedTime(elapsed, format)
+                breakdown = formatElapsedTime(elapsed, format),
+                canCycleFormat = getNextCounterFormat(format, elapsed) != format
             )
         }
     }.stateIn(
@@ -57,8 +63,11 @@ class ElapsedViewModel(
 
     fun onCounterTapped() {
         val state = uiState.value as? ElapsedUiState.Content ?: return
-        val next = getNextCounterFormat(state.format, state.elapsed)
-        if (next == state.format) return
+        val current = resolveCounterFormat(selectedFormat.value ?: state.format, state.elapsed)
+        val next = getNextCounterFormat(current, state.elapsed)
+        if (next == current) return
+
+        selectedFormat.value = next
         viewModelScope.launch {
             userPreferencesRepository.setCounterFormat(next)
         }
