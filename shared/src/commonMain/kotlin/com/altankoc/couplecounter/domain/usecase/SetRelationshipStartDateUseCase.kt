@@ -1,5 +1,6 @@
 package com.altankoc.couplecounter.domain.usecase
 
+import com.altankoc.couplecounter.domain.model.RelationshipRules
 import com.altankoc.couplecounter.domain.model.SaveDateResult
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import kotlinx.datetime.LocalDate
@@ -13,7 +14,8 @@ class SetRelationshipStartDateUseCase(
     private val timeZone: TimeZone
 ) {
     suspend operator fun invoke(date: LocalDate): SaveDateResult {
-        if (date > clock.todayIn(timeZone)) return SaveDateResult.FutureDateNotAllowed
+        val latestAllowed = RelationshipRules.latestStartDate(clock.todayIn(timeZone))
+        if (date > latestAllowed) return SaveDateResult.FutureDateNotAllowed
         repository.setRelationshipStartDate(date)
         return SaveDateResult.Success
     }

@@ -173,7 +173,7 @@ fun SettingsScreen(
     if (isPickerVisible) {
         AppDatePickerDialog(
             initialDate = uiState.relationshipStartDate,
-            maxDate = uiState.today,
+            maxDate = uiState.maxRelationshipStartDate,
             onDateSelected = { date ->
                 onRelationshipStartDateSelected(date)
                 isPickerVisible = false

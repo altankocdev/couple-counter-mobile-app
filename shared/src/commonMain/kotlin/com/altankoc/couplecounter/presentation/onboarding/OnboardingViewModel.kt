@@ -2,6 +2,7 @@ package com.altankoc.couplecounter.presentation.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.altankoc.couplecounter.domain.model.RelationshipRules
 import com.altankoc.couplecounter.domain.model.SaveDateResult
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
 import kotlinx.coroutines.channels.Channel
@@ -24,9 +25,9 @@ class OnboardingViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
-        clock.todayIn(timeZone).let { today ->
-            OnboardingUiState(maxSelectableDate = today, selectedDate = today)
-        }
+        OnboardingUiState(
+            maxSelectableDate = RelationshipRules.latestStartDate(clock.todayIn(timeZone))
+        )
     )
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
