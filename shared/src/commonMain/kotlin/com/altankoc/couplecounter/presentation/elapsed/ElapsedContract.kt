@@ -10,11 +10,9 @@ sealed interface ElapsedUiState {
     data class Content(
         val elapsed: ElapsedTime,
         val format: CounterFormat,
-        val breakdown: CounterBreakdown
-    ) : ElapsedUiState {
+        val breakdown: CounterBreakdown,
         val canCycleFormat: Boolean
-            get() = CounterFormat.entries.count { it.isAvailableFor(elapsed) } > 1
-
+    ) : ElapsedUiState {
         val showsTotalDays: Boolean
             get() = format != CounterFormat.DAY
     }
