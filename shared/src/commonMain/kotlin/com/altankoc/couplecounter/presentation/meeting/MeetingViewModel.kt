@@ -3,9 +3,11 @@ package com.altankoc.couplecounter.presentation.meeting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.altankoc.couplecounter.domain.model.MeetingCountdown
+import com.altankoc.couplecounter.domain.model.SaveDateResult
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.usecase.CalculateMeetingCountdownUseCase
 import com.altankoc.couplecounter.domain.usecase.ClearExpiredMeetingUseCase
+import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetNextMeetingDateUseCase
 import com.altankoc.couplecounter.presentation.common.secondTicker
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +27,7 @@ class MeetingViewModel(
     private val calculateMeetingCountdown: CalculateMeetingCountdownUseCase,
     private val clearExpiredMeeting: ClearExpiredMeetingUseCase,
     private val setNextMeetingDate: SetNextMeetingDateUseCase,
+    private val rescheduleReminders: RescheduleRemindersUseCase,
     private val clock: Clock,
     private val timeZone: TimeZone
 ) : ViewModel() {
@@ -36,7 +39,10 @@ class MeetingViewModel(
         calculateMeetingCountdown(meeting)
     }
         .onEach { countdown ->
-            if (countdown is MeetingCountdown.Expired) clearExpiredMeeting()
+            if (countdown is MeetingCountdown.Expired) {
+                clearExpiredMeeting()
+                rescheduleReminders()
+            }
         }
         .map { countdown ->
             MeetingUiState.Content(
@@ -52,7 +58,9 @@ class MeetingViewModel(
 
     fun onDateSelected(date: LocalDate) {
         viewModelScope.launch {
-            setNextMeetingDate(date)
+            if (setNextMeetingDate(date) == SaveDateResult.Success) {
+                rescheduleReminders()
+            }
         }
     }
 
