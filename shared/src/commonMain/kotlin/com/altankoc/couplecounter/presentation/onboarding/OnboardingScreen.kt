@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -36,6 +37,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +52,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -61,13 +66,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.presentation.common.AppInfo
-import com.altankoc.couplecounter.presentation.components.DateWheel
+import com.altankoc.couplecounter.presentation.components.AppDatePickerDialog
+import com.altankoc.couplecounter.presentation.format.toDisplayText
 import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import com.altankoc.couplecounter.presentation.theme.ThemePalettes
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 
 private enum class OnboardingPhase { Welcome, Intro, DateSelection, Preparing }
 
@@ -84,7 +94,13 @@ private const val PREPARE_RING_MILLIS = 2_200
 private const val PREPARE_HOLD_MILLIS = 400L
 private const val HEART_PULSE_MILLIS = 700
 
+private const val BACKDROP_CYCLE_MILLIS = 24_000
+private const val PARTICLE_COUNT = 22
+private const val TWO_PI = (2 * PI).toFloat()
+private const val GLOW_BLUR_RADIUS = 28f
+
 private val CardShape = RoundedCornerShape(28.dp)
+private val PillShape = RoundedCornerShape(50)
 private val MaxContentWidth = 380.dp
 
 private class Feature(val icon: ImageVector, val text: String)
@@ -94,6 +110,32 @@ private val Features = listOf(
     Feature(AppIcons.Hourglass, "Bir sonraki buluşmanıza kalan zamanı gösterir"),
     Feature(AppIcons.Bell, "Buluşma gününüzü ve özel anlarınızı size hatırlatır"),
     Feature(AppIcons.HeartOutline, "${ThemePalettes.all.size} farklı temayla size özel görünür")
+)
+
+private class Orb(
+    val x: Float,
+    val y: Float,
+    val radiusFraction: Float,
+    val drift: Float,
+    val phase: Float,
+    val alpha: Float,
+    val usesDarkTone: Boolean
+)
+
+private class Particle(
+    val x: Float,
+    val radiusDp: Float,
+    val speed: Int,
+    val phase: Float,
+    val wobble: Float,
+    val maxAlpha: Float
+)
+
+private val Orbs = listOf(
+    Orb(x = 0.15f, y = 0.18f, radiusFraction = 0.75f, drift = 0.08f, phase = 0.00f, alpha = 0.18f, usesDarkTone = false),
+    Orb(x = 0.85f, y = 0.38f, radiusFraction = 0.65f, drift = 0.10f, phase = 0.33f, alpha = 0.12f, usesDarkTone = false),
+    Orb(x = 0.30f, y = 0.72f, radiusFraction = 0.80f, drift = 0.07f, phase = 0.66f, alpha = 0.28f, usesDarkTone = true),
+    Orb(x = 0.75f, y = 0.92f, radiusFraction = 0.70f, drift = 0.09f, phase = 0.15f, alpha = 0.22f, usesDarkTone = true)
 )
 
 @Composable
@@ -153,46 +195,116 @@ fun OnboardingScreen(
         if (isPreparationAnimationDone && isSaved) currentOnFinished()
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(horizontal = 28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        AnimatedContent(
-            targetState = phase,
-            transitionSpec = {
-                val outMillis = if (initialState == OnboardingPhase.Welcome) {
-                    WELCOME_FADE_OUT_MILLIS
-                } else {
-                    SCENE_FADE_OUT_MILLIS
-                }
-                fadeIn(tween(SCENE_FADE_IN_MILLIS, outMillis, FastOutSlowInEasing)) togetherWith
-                        fadeOut(tween(outMillis, easing = FastOutSlowInEasing)) using
-                        SizeTransform(clip = false)
-            },
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-            label = "onboardingScene"
-        ) { current ->
-            when (current) {
-                OnboardingPhase.Welcome -> WelcomeScene()
-                OnboardingPhase.Intro -> IntroScene(
-                    onNext = { phaseOrdinal = OnboardingPhase.DateSelection.ordinal }
-                )
-                OnboardingPhase.DateSelection -> DateScene(
-                    uiState = uiState,
-                    onDateSelected = onDateSelected,
-                    onStart = {
-                        phaseOrdinal = OnboardingPhase.Preparing.ordinal
-                        onContinue()
+    Box(modifier = modifier.fillMaxSize()) {
+        OnboardingBackdrop(modifier = Modifier.fillMaxSize())
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .padding(horizontal = 28.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedContent(
+                targetState = phase,
+                transitionSpec = {
+                    val outMillis = if (initialState == OnboardingPhase.Welcome) {
+                        WELCOME_FADE_OUT_MILLIS
+                    } else {
+                        SCENE_FADE_OUT_MILLIS
                     }
-                )
-                OnboardingPhase.Preparing -> PreparingScene(
-                    onAnimationDone = { isPreparationAnimationDone = true }
-                )
+                    fadeIn(tween(SCENE_FADE_IN_MILLIS, outMillis, FastOutSlowInEasing)) togetherWith
+                            fadeOut(tween(outMillis, easing = FastOutSlowInEasing)) using
+                            SizeTransform(clip = false)
+                },
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+                label = "onboardingScene"
+            ) { current ->
+                when (current) {
+                    OnboardingPhase.Welcome -> WelcomeScene()
+                    OnboardingPhase.Intro -> IntroScene(
+                        onNext = { phaseOrdinal = OnboardingPhase.DateSelection.ordinal }
+                    )
+                    OnboardingPhase.DateSelection -> DateScene(
+                        uiState = uiState,
+                        onDateSelected = onDateSelected,
+                        onStart = {
+                            phaseOrdinal = OnboardingPhase.Preparing.ordinal
+                            onContinue()
+                        }
+                    )
+                    OnboardingPhase.Preparing -> PreparingScene(
+                        onAnimationDone = { isPreparationAnimationDone = true }
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingBackdrop(modifier: Modifier = Modifier) {
+    val palette = CoupleCounterTheme.palette
+    val lightTone = palette.contentBottom
+    val darkTone = palette.contentTop
+
+    val particles = remember {
+        val random = Random(seed = 7)
+        List(PARTICLE_COUNT) {
+            Particle(
+                x = random.nextFloat(),
+                radiusDp = 1f + random.nextFloat() * 2f,
+                speed = 1 + random.nextInt(3),
+                phase = random.nextFloat(),
+                wobble = 1f + random.nextFloat() * 2f,
+                maxAlpha = 0.25f + random.nextFloat() * 0.45f
+            )
+        }
+    }
+
+    val transition = rememberInfiniteTransition(label = "onboardingBackdrop")
+    val time by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(BACKDROP_CYCLE_MILLIS, easing = LinearEasing)),
+        label = "backdropTime"
+    )
+
+    Canvas(modifier = modifier) {
+        val angle = time * TWO_PI
+
+        Orbs.forEach { orb ->
+            val orbAngle = angle + orb.phase * TWO_PI
+            val center = Offset(
+                x = size.width * (orb.x + orb.drift * cos(orbAngle)),
+                y = size.height * (orb.y + orb.drift * 0.6f * sin(orbAngle))
+            )
+            val radius = size.minDimension * orb.radiusFraction
+            val tone = if (orb.usesDarkTone) darkTone else lightTone
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(tone.copy(alpha = orb.alpha), Color.Transparent),
+                    center = center,
+                    radius = radius
+                ),
+                radius = radius,
+                center = center
+            )
+        }
+
+        val wobbleAmplitude = 10.dp.toPx()
+        particles.forEach { particle ->
+            val t = (time * particle.speed + particle.phase) % 1f
+            val center = Offset(
+                x = size.width * particle.x + sin(t * TWO_PI * particle.wobble) * wobbleAmplitude,
+                y = size.height * (1.05f - t * 1.1f)
+            )
+            drawCircle(
+                color = lightTone.copy(alpha = sin(t * PI.toFloat()) * particle.maxAlpha),
+                radius = particle.radiusDp.dp.toPx(),
+                center = center
+            )
         }
     }
 }
@@ -214,7 +326,11 @@ private fun WelcomeScene() {
                     fontSize = 58.sp,
                     lineHeight = 70.sp,
                     color = palette.contentBottom,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    shadow = Shadow(
+                        color = palette.contentBottom.copy(alpha = 0.45f),
+                        blurRadius = GLOW_BLUR_RADIUS
+                    )
                 )
             )
         }
@@ -240,7 +356,11 @@ private fun IntroScene(onNext: () -> Unit) {
                     fontSize = 52.sp,
                     lineHeight = 64.sp,
                     color = palette.contentTop,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    shadow = Shadow(
+                        color = palette.contentBottom.copy(alpha = 0.5f),
+                        blurRadius = GLOW_BLUR_RADIUS
+                    )
                 )
             )
         }
@@ -277,8 +397,10 @@ private fun DateScene(
     onStart: () -> Unit
 ) {
     val palette = CoupleCounterTheme.palette
+    val fonts = CoupleCounterTheme.fonts
     val typography = MaterialTheme.typography
-    val selectedDate = uiState.selectedDate ?: uiState.maxSelectableDate
+    var isPickerVisible by rememberSaveable { mutableStateOf(false) }
+    val selectedDate = uiState.selectedDate
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -299,17 +421,72 @@ private fun DateScene(
                 color = palette.contentBottom.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
+
+            Spacer(Modifier.height(24.dp))
+
+            AnimatedContent(
+                targetState = selectedDate,
+                transitionSpec = {
+                    fadeIn(tween(500, 150, FastOutSlowInEasing)) togetherWith
+                            fadeOut(tween(250, easing = FastOutSlowInEasing))
+                },
+                label = "selectedDate"
+            ) { date ->
+                Text(
+                    text = date?.toDisplayText() ?: "Henüz seçilmedi",
+                    style = TextStyle(
+                        fontFamily = fonts.serif,
+                        fontSize = 34.sp,
+                        lineHeight = 42.sp,
+                        color = if (date != null) palette.contentBottom else palette.contentBottom.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
-            DateWheel(
-                selected = selectedDate,
-                onSelectedChange = onDateSelected,
-                maxDate = uiState.maxSelectableDate
-            )
+
+            TextButton(
+                onClick = { isPickerVisible = true },
+                shape = PillShape,
+                modifier = Modifier
+                    .clip(PillShape)
+                    .border(1.dp, palette.contentBottom.copy(alpha = 0.3f), PillShape)
+                    .padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = if (selectedDate == null) "Tarih seç" else "Değiştir",
+                    style = typography.titleSmall.copy(letterSpacing = 2.sp),
+                    color = palette.contentBottom
+                )
+            }
+
+            if (uiState.error != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "Bu tarih seçilemez.",
+                    style = typography.bodyMedium,
+                    color = palette.contentSecondary
+                )
+            }
         }
 
         Spacer(Modifier.height(20.dp))
 
         PrimaryButton(text = "Başlayalım", enabled = uiState.canContinue, onClick = onStart)
+    }
+
+    if (isPickerVisible) {
+        AppDatePickerDialog(
+            initialDate = selectedDate ?: uiState.maxSelectableDate,
+            maxDate = uiState.maxSelectableDate,
+            onDateSelected = { date ->
+                onDateSelected(date)
+                isPickerVisible = false
+            },
+            onDismiss = { isPickerVisible = false }
+        )
     }
 }
 
@@ -352,6 +529,15 @@ private fun PreparingScene(onAnimationDone: () -> Unit) {
                 val strokeWidth = 2.dp.toPx()
                 val inset = strokeWidth / 2f
                 val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(ringColor.copy(alpha = 0.18f * progress.value), Color.Transparent),
+                        center = center,
+                        radius = size.minDimension / 2f
+                    ),
+                    radius = size.minDimension / 2f,
+                    center = center
+                )
                 drawArc(
                     color = ringColor.copy(alpha = 0.15f),
                     startAngle = 0f,
@@ -410,8 +596,24 @@ private fun GlassCard(content: @Composable ColumnScope.() -> Unit) {
             .widthIn(max = MaxContentWidth)
             .fillMaxWidth()
             .clip(CardShape)
-            .background(palette.contentBottom.copy(alpha = 0.08f))
-            .border(1.dp, palette.contentBottom.copy(alpha = 0.16f), CardShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        palette.contentBottom.copy(alpha = 0.14f),
+                        palette.contentBottom.copy(alpha = 0.05f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    listOf(
+                        palette.contentBottom.copy(alpha = 0.35f),
+                        palette.contentBottom.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = CardShape
+            )
             .padding(horizontal = 24.dp, vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content
@@ -461,7 +663,7 @@ private fun PrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(50),
+        shape = PillShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = palette.accent,
             contentColor = palette.onAccent,

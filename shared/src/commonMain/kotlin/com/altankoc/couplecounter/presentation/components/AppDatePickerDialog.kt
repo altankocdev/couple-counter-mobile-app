@@ -1,5 +1,10 @@
 package com.altankoc.couplecounter.presentation.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,11 +37,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altankoc.couplecounter.presentation.format.TurkishMonthNames
+import com.altankoc.couplecounter.presentation.format.toDisplayText
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
@@ -50,7 +59,11 @@ import kotlin.time.Clock
 private const val YEARS_BACK = 60
 private const val YEARS_FORWARD = 10
 private const val MONTHS_IN_YEAR = 12
+private const val SCRIM_ALPHA = 0.28f
 private val SelectionShape = RoundedCornerShape(14.dp)
+private val SheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+private val HandleShape = RoundedCornerShape(50)
+private val WarningShape = RoundedCornerShape(12.dp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,27 +84,80 @@ fun AppDatePickerDialog(
         mutableStateOf((initialDate ?: maxDate ?: minDate ?: fallback).coerceWithin(minDate, maxDate))
     }
 
+    val validationMessage = when {
+        maxDate != null && selected > maxDate -> "En geç ${maxDate.toDisplayText()} seçilebilir"
+        minDate != null && selected < minDate -> "En erken ${minDate.toDisplayText()} seçilebilir"
+        else -> null
+    }
+
     fun dismissThen(action: () -> Unit) {
         scope.launch { sheetState.hide() }.invokeOnCompletion { action() }
     }
 
+    val glowColor = palette.contentBottom
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = palette.surface,
+        shape = SheetShape,
+        containerColor = Color.Transparent,
         contentColor = palette.contentBottom,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = palette.contentSecondary.copy(alpha = 0.4f)) }
+        tonalElevation = 0.dp,
+        scrimColor = Color.Black.copy(alpha = SCRIM_ALPHA),
+        dragHandle = null,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(SheetShape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            palette.surface.copy(alpha = 0.72f),
+                            palette.surface.copy(alpha = 0.88f),
+                            palette.surface.copy(alpha = 0.96f)
+                        )
+                    )
+                )
+                .drawBehind {
+                    val center = Offset(size.width / 2f, 0f)
+                    val radius = size.width * 0.7f
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(glowColor.copy(alpha = 0.12f), Color.Transparent),
+                            center = center,
+                            radius = radius
+                        ),
+                        radius = radius,
+                        center = center
+                    )
+                }
+                .border(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        listOf(palette.contentBottom.copy(alpha = 0.35f), Color.Transparent)
+                    ),
+                    shape = SheetShape
+                )
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(width = 40.dp, height = 4.dp)
+                    .clip(HandleShape)
+                    .background(palette.contentBottom.copy(alpha = 0.35f))
+            )
+
+            Spacer(Modifier.height(20.dp))
+
             Text(
                 text = "Tarih seç",
                 style = typography.titleMedium.copy(letterSpacing = 2.sp),
-                color = palette.contentSecondary
+                color = palette.contentBottom
             )
 
             Spacer(Modifier.height(16.dp))
@@ -100,9 +166,29 @@ fun AppDatePickerDialog(
                 selected = selected,
                 onSelectedChange = { selected = it },
                 minDate = minDate,
-                maxDate = maxDate,
-                edgeFadeColor = palette.surface
+                maxDate = maxDate
             )
+
+            AnimatedVisibility(
+                visible = validationMessage != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = validationMessage.orEmpty(),
+                        style = typography.bodyMedium,
+                        color = palette.contentBottom,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .clip(WarningShape)
+                            .background(palette.contentBottom.copy(alpha = 0.1f))
+                            .border(1.dp, palette.contentBottom.copy(alpha = 0.2f), WarningShape)
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
+                }
+            }
 
             Spacer(Modifier.height(24.dp))
 
@@ -128,10 +214,13 @@ fun AppDatePickerDialog(
                         val date = selected
                         dismissThen { onDateSelected(date) }
                     },
+                    enabled = validationMessage == null,
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = palette.accent,
-                        contentColor = palette.onAccent
+                        contentColor = palette.onAccent,
+                        disabledContainerColor = palette.contentBottom.copy(alpha = 0.12f),
+                        disabledContentColor = palette.contentBottom.copy(alpha = 0.4f)
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -144,7 +233,7 @@ fun AppDatePickerDialog(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
             Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         }
     }
@@ -156,8 +245,7 @@ internal fun DateWheel(
     onSelectedChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     minDate: LocalDate? = null,
-    maxDate: LocalDate? = null,
-    edgeFadeColor: Color? = null
+    maxDate: LocalDate? = null
 ) {
     val palette = CoupleCounterTheme.palette
 
@@ -171,7 +259,7 @@ internal fun DateWheel(
 
     fun resolve(year: Int, month: Int, day: Int): LocalDate {
         val safeDay = minOf(day, daysInMonth(year, month))
-        return LocalDate(year, month, safeDay).coerceWithin(minDate, maxDate)
+        return LocalDate(year, month, safeDay)
     }
 
     Box(
@@ -221,23 +309,7 @@ internal fun DateWheel(
                 modifier = Modifier.weight(1f)
             )
         }
-
-        if (edgeFadeColor != null) {
-            EdgeFade(color = edgeFadeColor, modifier = Modifier.align(Alignment.TopCenter), fromTop = true)
-            EdgeFade(color = edgeFadeColor, modifier = Modifier.align(Alignment.BottomCenter), fromTop = false)
-        }
     }
-}
-
-@Composable
-private fun EdgeFade(color: Color, modifier: Modifier, fromTop: Boolean) {
-    val colors = if (fromTop) listOf(color, Color.Transparent) else listOf(Color.Transparent, color)
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(WheelItemHeight * 1.5f)
-            .background(Brush.verticalGradient(colors))
-    )
 }
 
 private fun daysInMonth(year: Int, month: Int): Int =
