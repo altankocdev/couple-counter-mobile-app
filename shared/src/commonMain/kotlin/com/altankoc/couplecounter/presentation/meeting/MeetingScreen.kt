@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -60,13 +60,15 @@ import org.koin.compose.viewmodel.koinViewModel
 
 private const val HOURGLASS_ASPECT_RATIO = 150f / 270f
 private val MaxHourglassHeight = 380.dp
+private val DialogShape = RoundedCornerShape(28.dp)
 
 @Composable
 fun MeetingRoot(viewModel: MeetingViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     MeetingScreen(
         uiState = uiState,
-        onDateSelected = viewModel::onDateSelected
+        onDateSelected = viewModel::onDateSelected,
+        onMeetingCancelled = viewModel::onMeetingCancelled
     )
 }
 
@@ -74,11 +76,13 @@ fun MeetingRoot(viewModel: MeetingViewModel = koinViewModel()) {
 fun MeetingScreen(
     uiState: MeetingUiState,
     onDateSelected: (LocalDate) -> Unit,
+    onMeetingCancelled: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = CoupleCounterTheme.palette
     val typography = MaterialTheme.typography
     var isPickerVisible by rememberSaveable { mutableStateOf(false) }
+    var isCancelConfirmationVisible by rememberSaveable { mutableStateOf(false) }
     val openPicker = { isPickerVisible = true }
 
     Column(
@@ -170,16 +174,84 @@ fun MeetingScreen(
     }
 
     if (isPickerVisible && uiState is MeetingUiState.Content) {
+        val scheduledDate = uiState.scheduledDate
         AppDatePickerDialog(
-            initialDate = uiState.scheduledDate,
+            initialDate = scheduledDate,
             minDate = uiState.today,
             onDateSelected = { date ->
                 onDateSelected(date)
                 isPickerVisible = false
             },
-            onDismiss = { isPickerVisible = false }
+            onDismiss = { isPickerVisible = false },
+            clearLabel = if (scheduledDate != null) "Buluşmayı iptal et" else null,
+            onClear = if (scheduledDate != null) {
+                {
+                    isPickerVisible = false
+                    isCancelConfirmationVisible = true
+                }
+            } else {
+                null
+            }
         )
     }
+
+    if (isCancelConfirmationVisible) {
+        CancelMeetingDialog(
+            onConfirm = {
+                isCancelConfirmationVisible = false
+                onMeetingCancelled()
+            },
+            onDismiss = { isCancelConfirmationVisible = false }
+        )
+    }
+}
+
+@Composable
+private fun CancelMeetingDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val palette = CoupleCounterTheme.palette
+    val typography = MaterialTheme.typography
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = DialogShape,
+        containerColor = palette.surface,
+        titleContentColor = palette.contentBottom,
+        textContentColor = palette.contentBottom.copy(alpha = 0.8f),
+        title = {
+            Text(
+                text = "Buluşma iptal edilsin mi?",
+                style = typography.titleLarge,
+                fontWeight = FontWeight.Light
+            )
+        },
+        text = {
+            Text(
+                text = "Bu buluşmaya ait hatırlatmalar da kaldırılacak.",
+                style = typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = "İptal et",
+                    style = typography.titleSmall.copy(letterSpacing = 1.sp),
+                    color = palette.contentBottom
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Vazgeç",
+                    style = typography.titleSmall.copy(letterSpacing = 1.sp),
+                    color = palette.contentSecondary
+                )
+            }
+        }
+    )
 }
 
 @Composable

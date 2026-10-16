@@ -3,6 +3,7 @@ package com.altankoc.couplecounter.di
 import com.altankoc.couplecounter.domain.usecase.BuildUpcomingRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.CalculateElapsedTimeUseCase
 import com.altankoc.couplecounter.domain.usecase.CalculateMeetingCountdownUseCase
+import com.altankoc.couplecounter.domain.usecase.CancelNextMeetingUseCase
 import com.altankoc.couplecounter.domain.usecase.ClearExpiredMeetingUseCase
 import com.altankoc.couplecounter.domain.usecase.FormatElapsedTimeUseCase
 import com.altankoc.couplecounter.domain.usecase.GetNextCounterFormatUseCase
@@ -27,6 +28,7 @@ internal val domainModule = module {
     factoryOf(::SetRelationshipStartDateUseCase)
     factoryOf(::SetNextMeetingDateUseCase)
     factoryOf(::ClearExpiredMeetingUseCase)
+    factoryOf(::CancelNextMeetingUseCase)
     factoryOf(::BuildUpcomingRemindersUseCase)
     factoryOf(::RescheduleRemindersUseCase)
 }

@@ -1,6 +1,10 @@
 package com.altankoc.couplecounter.presentation.settings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -33,6 +37,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -76,13 +81,19 @@ import org.koin.compose.viewmodel.koinViewModel
 
 private val PanelShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 private val RowShape = RoundedCornerShape(16.dp)
+private val MasterCardShape = RoundedCornerShape(22.dp)
 private val ThemeCardShape = RoundedCornerShape(20.dp)
 private val ToastShape = RoundedCornerShape(16.dp)
+private val PillShape = RoundedCornerShape(50)
 private val ScreenPadding = 24.dp
+private val ToggleWidth = 54.dp
+private val ToggleHeight = 32.dp
+private val ToggleThumbSize = 26.dp
+private val ToggleThumbPadding = 3.dp
 private const val TOAST_DURATION_MILLIS = 3_500L
 private const val DISABLED_ALPHA = 0.45f
 private const val PERMISSION_DENIED_MESSAGE =
-    "Bildirim izni verilmedi. İzni telefonunuzun ayarlarından açabilirsiniz."
+    "Bildirim izni verilmedi. Tekrar dokunarak ayarlardan açabilirsiniz."
 
 @Composable
 fun SettingsRoot(
@@ -121,7 +132,13 @@ fun SettingsRoot(
         onBack = onBack,
         onThemeSelected = viewModel::onThemeSelected,
         onRelationshipStartDateSelected = viewModel::onRelationshipStartDateSelected,
-        onRequestNotificationPermission = requestNotificationPermission,
+        onNotificationsMasterClick = {
+            if (uiState.isNotificationPermissionGranted) {
+                viewModel.onNotificationsEnabledChanged(!uiState.notificationPreferences.enabled)
+            } else {
+                requestNotificationPermission()
+            }
+        },
         onNotificationPreferencesChanged = viewModel::onNotificationPreferencesChanged
     )
 }
@@ -133,7 +150,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onThemeSelected: (ThemeId) -> Unit,
     onRelationshipStartDateSelected: (LocalDate) -> Unit,
-    onRequestNotificationPermission: () -> Unit,
+    onNotificationsMasterClick: () -> Unit,
     onNotificationPreferencesChanged: (NotificationPreferences) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -212,8 +229,9 @@ fun SettingsScreen(
 
                 NotificationsSection(
                     isPermissionGranted = uiState.isNotificationPermissionGranted,
+                    isActive = uiState.areNotificationsActive,
                     preferences = uiState.notificationPreferences,
-                    onRequestPermission = onRequestNotificationPermission,
+                    onMasterClick = onNotificationsMasterClick,
                     onPreferencesChanged = onNotificationPreferencesChanged
                 )
 
@@ -256,43 +274,178 @@ fun SettingsScreen(
 @Composable
 private fun NotificationsSection(
     isPermissionGranted: Boolean,
+    isActive: Boolean,
     preferences: NotificationPreferences,
-    onRequestPermission: () -> Unit,
+    onMasterClick: () -> Unit,
     onPreferencesChanged: (NotificationPreferences) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (!isPermissionGranted) {
-            SettingsRow(
-                label = "Bildirimlere izin ver",
-                value = "İzin ver",
-                onClick = onRequestPermission
-            )
-        }
+        NotificationMasterCard(
+            isPermissionGranted = isPermissionGranted,
+            isActive = isActive,
+            onClick = onMasterClick
+        )
+
+        Spacer(Modifier.height(4.dp))
 
         SettingsToggleRow(
             label = "Buluşma takibi",
             checked = preferences.meetingReminders,
-            enabled = isPermissionGranted,
+            enabled = isActive,
             onCheckedChange = { onPreferencesChanged(preferences.copy(meetingReminders = it)) }
         )
         SettingsToggleRow(
             label = "Yıl dönümleri",
             checked = preferences.yearlyAnniversaries,
-            enabled = isPermissionGranted,
+            enabled = isActive,
             onCheckedChange = { onPreferencesChanged(preferences.copy(yearlyAnniversaries = it)) }
         )
         SettingsToggleRow(
             label = "Ay dönümleri",
             checked = preferences.monthlyAnniversaries,
-            enabled = isPermissionGranted,
+            enabled = isActive,
             onCheckedChange = { onPreferencesChanged(preferences.copy(monthlyAnniversaries = it)) }
         )
         SettingsToggleRow(
             label = "100'ün katı günler",
             checked = preferences.hundredDayMilestones,
-            enabled = isPermissionGranted,
+            enabled = isActive,
             onCheckedChange = { onPreferencesChanged(preferences.copy(hundredDayMilestones = it)) }
         )
+    }
+}
+
+@Composable
+private fun NotificationMasterCard(
+    isPermissionGranted: Boolean,
+    isActive: Boolean,
+    onClick: () -> Unit
+) {
+    val palette = CoupleCounterTheme.palette
+    val typography = MaterialTheme.typography
+
+    val subtitle = when {
+        !isPermissionGranted -> "İzin vermek için dokunun"
+        isActive -> "Hatırlatmalar açık"
+        else -> "Hatırlatmalar kapalı"
+    }
+    val borderColor by animateColorAsState(
+        targetValue = if (isActive) palette.accent else palette.contentBottom.copy(alpha = 0.18f),
+        label = "masterBorder"
+    )
+    val iconBackground by animateColorAsState(
+        targetValue = if (isActive) palette.accent else palette.contentBottom.copy(alpha = 0.12f),
+        label = "masterIconBackground"
+    )
+    val iconTint by animateColorAsState(
+        targetValue = if (isActive) palette.onAccent else palette.contentBottom,
+        label = "masterIconTint"
+    )
+    val glowAlpha = if (isActive) 0.22f else 0.06f
+
+    Row(
+        modifier = Modifier
+            .padding(horizontal = ScreenPadding)
+            .fillMaxWidth()
+            .clip(MasterCardShape)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        palette.accent.copy(alpha = glowAlpha),
+                        palette.contentBottom.copy(alpha = 0.04f)
+                    )
+                )
+            )
+            .border(1.5.dp, borderColor, MasterCardShape)
+            .clickable(onClickLabel = "Bildirimleri aç veya kapat", onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(iconBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = AppIcons.Bell,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        Spacer(Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Bildirimler",
+                style = typography.titleMedium,
+                color = palette.contentBottom
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = typography.bodySmall,
+                color = palette.contentSecondary
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        HeartToggle(checked = isActive)
+    }
+}
+
+@Composable
+private fun HeartToggle(checked: Boolean) {
+    val palette = CoupleCounterTheme.palette
+
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) ToggleWidth - ToggleThumbSize - ToggleThumbPadding else ToggleThumbPadding,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "toggleThumbOffset"
+    )
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.contentBottom.copy(alpha = 0.12f),
+        label = "toggleTrack"
+    )
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) palette.onAccent else palette.contentSecondary,
+        label = "toggleThumb"
+    )
+    val heartColor by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.surface.copy(alpha = 0.6f),
+        label = "toggleHeart"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(width = ToggleWidth, height = ToggleHeight)
+            .clip(PillShape)
+            .background(trackColor)
+            .border(1.dp, palette.contentBottom.copy(alpha = if (checked) 0f else 0.25f), PillShape),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(ToggleThumbSize)
+                .clip(CircleShape)
+                .background(thumbColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = AppIcons.Heart,
+                contentDescription = null,
+                tint = heartColor,
+                modifier = Modifier.size(13.dp)
+            )
+        }
     }
 }
 

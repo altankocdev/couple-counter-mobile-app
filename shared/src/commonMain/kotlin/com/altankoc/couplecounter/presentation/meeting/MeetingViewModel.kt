@@ -6,6 +6,7 @@ import com.altankoc.couplecounter.domain.model.MeetingCountdown
 import com.altankoc.couplecounter.domain.model.SaveDateResult
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.usecase.CalculateMeetingCountdownUseCase
+import com.altankoc.couplecounter.domain.usecase.CancelNextMeetingUseCase
 import com.altankoc.couplecounter.domain.usecase.ClearExpiredMeetingUseCase
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetNextMeetingDateUseCase
@@ -27,6 +28,7 @@ class MeetingViewModel(
     private val calculateMeetingCountdown: CalculateMeetingCountdownUseCase,
     private val clearExpiredMeeting: ClearExpiredMeetingUseCase,
     private val setNextMeetingDate: SetNextMeetingDateUseCase,
+    private val cancelNextMeeting: CancelNextMeetingUseCase,
     private val rescheduleReminders: RescheduleRemindersUseCase,
     private val clock: Clock,
     private val timeZone: TimeZone
@@ -61,6 +63,13 @@ class MeetingViewModel(
             if (setNextMeetingDate(date) == SaveDateResult.Success) {
                 rescheduleReminders()
             }
+        }
+    }
+
+    fun onMeetingCancelled() {
+        viewModelScope.launch {
+            cancelNextMeeting()
+            rescheduleReminders()
         }
     }
 
