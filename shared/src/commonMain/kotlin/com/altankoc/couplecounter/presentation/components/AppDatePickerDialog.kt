@@ -1,9 +1,9 @@
 package com.altankoc.couplecounter.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -72,7 +72,9 @@ fun AppDatePickerDialog(
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
     minDate: LocalDate? = null,
-    maxDate: LocalDate? = null
+    maxDate: LocalDate? = null,
+    clearLabel: String? = null,
+    onClear: (() -> Unit)? = null
 ) {
     val palette = CoupleCounterTheme.palette
     val typography = MaterialTheme.typography
@@ -229,6 +231,17 @@ fun AppDatePickerDialog(
                     Text(
                         text = "Tamam",
                         style = typography.titleSmall.copy(letterSpacing = 1.5.sp)
+                    )
+                }
+            }
+
+            if (clearLabel != null && onClear != null) {
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = { dismissThen(onClear) }) {
+                    Text(
+                        text = clearLabel,
+                        style = typography.bodyMedium.copy(letterSpacing = 1.sp),
+                        color = palette.contentSecondary
                     )
                 }
             }

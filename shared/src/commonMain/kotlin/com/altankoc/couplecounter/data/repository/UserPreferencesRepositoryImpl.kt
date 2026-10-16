@@ -30,6 +30,8 @@ internal class UserPreferencesRepositoryImpl(
         .map { preferences ->
             val defaults = NotificationPreferences()
             NotificationPreferences(
+                enabled = preferences[PreferenceKeys.NotificationsEnabled]
+                    ?: defaults.enabled,
                 meetingReminders = preferences[PreferenceKeys.NotifyMeetingReminders]
                     ?: defaults.meetingReminders,
                 yearlyAnniversaries = preferences[PreferenceKeys.NotifyYearlyAnniversaries]
@@ -56,6 +58,7 @@ internal class UserPreferencesRepositoryImpl(
 
     override suspend fun setNotificationPreferences(preferences: NotificationPreferences) {
         dataStore.edit { stored ->
+            stored[PreferenceKeys.NotificationsEnabled] = preferences.enabled
             stored[PreferenceKeys.NotifyMeetingReminders] = preferences.meetingReminders
             stored[PreferenceKeys.NotifyYearlyAnniversaries] = preferences.yearlyAnniversaries
             stored[PreferenceKeys.NotifyMonthlyAnniversaries] = preferences.monthlyAnniversaries

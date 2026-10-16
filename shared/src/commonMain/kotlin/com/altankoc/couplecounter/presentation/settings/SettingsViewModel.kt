@@ -10,12 +10,14 @@ import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
+import com.altankoc.couplecounter.presentation.notification.NotificationPermissionResult
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -64,20 +66,31 @@ class SettingsViewModel(
 
     fun refreshNotificationPermission() {
         viewModelScope.launch {
-            isPermissionGranted.value = notificationPermissionProvider.isGranted()
+            val wasGranted = isPermissionGranted.value
+            val isGranted = notificationPermissionProvider.isGranted()
+            isPermissionGranted.value = isGranted
+            if (isGranted != wasGranted) rescheduleReminders()
         }
     }
 
-    fun onNotificationPermissionResult(granted: Boolean) {
+    fun onNotificationPermissionResult(result: NotificationPermissionResult) {
         viewModelScope.launch {
-            val isGranted = granted && notificationPermissionProvider.isGranted()
-            isPermissionGranted.value = isGranted
-            if (isGranted) {
-                rescheduleReminders()
-            } else {
-                _events.send(SettingsEvent.NotificationPermissionDenied)
+            when (result) {
+                NotificationPermissionResult.Granted -> {
+                    isPermissionGranted.value = notificationPermissionProvider.isGranted()
+                    if (isPermissionGranted.value) updateNotificationsEnabled(true)
+                }
+                NotificationPermissionResult.Denied -> {
+                    isPermissionGranted.value = notificationPermissionProvider.isGranted()
+                    _events.send(SettingsEvent.NotificationPermissionDenied)
+                }
+                NotificationPermissionResult.OpenedSettings -> Unit
             }
         }
+    }
+
+    fun onNotificationsEnabledChanged(enabled: Boolean) {
+        viewModelScope.launch { updateNotificationsEnabled(enabled) }
     }
 
     fun onNotificationPreferencesChanged(preferences: NotificationPreferences) {
@@ -99,6 +112,14 @@ class SettingsViewModel(
                 rescheduleReminders()
             }
         }
+    }
+
+    private suspend fun updateNotificationsEnabled(enabled: Boolean) {
+        val current = userPreferencesRepository.notificationPreferences.first()
+        if (current.enabled != enabled) {
+            userPreferencesRepository.setNotificationPreferences(current.copy(enabled = enabled))
+        }
+        rescheduleReminders()
     }
 
     private companion object {

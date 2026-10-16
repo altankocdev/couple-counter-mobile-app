@@ -24,6 +24,8 @@ class BuildUpcomingRemindersUseCase(
         meeting: ScheduledMeeting?,
         preferences: NotificationPreferences
     ): List<Reminder> {
+        if (!preferences.enabled) return emptyList()
+
         val now = clock.now()
         val today = now.toLocalDateTime(timeZone).date
 

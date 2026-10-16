@@ -14,6 +14,9 @@ data class SettingsUiState(
 ) {
     val maxRelationshipStartDate: LocalDate
         get() = RelationshipRules.latestStartDate(today)
+
+    val areNotificationsActive: Boolean
+        get() = isNotificationPermissionGranted && notificationPreferences.enabled
 }
 
 sealed interface SettingsEvent {
