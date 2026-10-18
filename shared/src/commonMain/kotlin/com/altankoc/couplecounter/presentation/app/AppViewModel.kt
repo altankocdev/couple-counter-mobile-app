@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
+import com.altankoc.couplecounter.domain.usecase.ClearDeliveredNotificationsUseCase
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 class AppViewModel(
     relationshipRepository: RelationshipRepository,
     userPreferencesRepository: UserPreferencesRepository,
-    private val rescheduleReminders: RescheduleRemindersUseCase
+    private val rescheduleReminders: RescheduleRemindersUseCase,
+    private val clearDeliveredNotifications: ClearDeliveredNotificationsUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<AppUiState> = combine(
@@ -33,6 +35,10 @@ class AppViewModel(
 
     init {
         viewModelScope.launch { rescheduleReminders() }
+    }
+
+    fun onAppResumed() {
+        viewModelScope.launch { clearDeliveredNotifications() }
     }
 
     private companion object {

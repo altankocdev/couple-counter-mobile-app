@@ -19,15 +19,26 @@ internal class AndroidReminderScheduler(
 
     override suspend fun replaceAll(reminders: List<Reminder>) {
         val manager = alarmManager ?: return
-
         ReminderIds.all.forEach { id ->
-            manager.cancel(pendingIntent(id = id, message = null))
+            manager.cancel(pendingIntent(id = id, message = null, badgeNumber = 0))
         }
+        scheduleInternal(manager, reminders)
+    }
 
-        reminders.forEach { reminder ->
+    override suspend fun schedule(reminders: List<Reminder>) {
+        val manager = alarmManager ?: return
+        scheduleInternal(manager, reminders)
+    }
+
+    override suspend fun clearDeliveredNotifications() {
+        ReminderNotifications.clearAll(context)
+    }
+
+    private fun scheduleInternal(manager: AlarmManager, reminders: List<Reminder>) {
+        reminders.sortedBy { it.triggerAt }.forEachIndexed { index, reminder ->
             val message = ReminderMessageFormatter.format(reminder.event)
             val triggerAtMillis = reminder.triggerAt.toEpochMilliseconds()
-            val intent = pendingIntent(id = reminder.id, message = message)
+            val intent = pendingIntent(id = reminder.id, message = message, badgeNumber = index + 1)
 
             if (canScheduleExactAlarms(manager)) {
                 manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, intent)
@@ -40,10 +51,11 @@ internal class AndroidReminderScheduler(
     private fun canScheduleExactAlarms(manager: AlarmManager): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || manager.canScheduleExactAlarms()
 
-    private fun pendingIntent(id: Int, message: ReminderMessage?): PendingIntent {
+    private fun pendingIntent(id: Int, message: ReminderMessage?, badgeNumber: Int): PendingIntent {
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             action = ReminderReceiver.ACTION_SHOW_REMINDER
             putExtra(ReminderReceiver.EXTRA_ID, id)
+            putExtra(ReminderReceiver.EXTRA_BADGE, badgeNumber)
             if (message != null) {
                 putExtra(ReminderReceiver.EXTRA_TITLE, message.title)
                 putExtra(ReminderReceiver.EXTRA_BODY, message.body)

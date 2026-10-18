@@ -4,11 +4,13 @@ import com.altankoc.couplecounter.domain.usecase.BuildUpcomingRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.CalculateElapsedTimeUseCase
 import com.altankoc.couplecounter.domain.usecase.CalculateMeetingCountdownUseCase
 import com.altankoc.couplecounter.domain.usecase.CancelNextMeetingUseCase
+import com.altankoc.couplecounter.domain.usecase.ClearDeliveredNotificationsUseCase
 import com.altankoc.couplecounter.domain.usecase.ClearExpiredMeetingUseCase
 import com.altankoc.couplecounter.domain.usecase.FormatElapsedTimeUseCase
 import com.altankoc.couplecounter.domain.usecase.GetNextCounterFormatUseCase
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.ResolveCounterFormatUseCase
+import com.altankoc.couplecounter.domain.usecase.ScheduleTestRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetNextMeetingDateUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
 import kotlinx.datetime.TimeZone
@@ -31,4 +33,6 @@ internal val domainModule = module {
     factoryOf(::CancelNextMeetingUseCase)
     factoryOf(::BuildUpcomingRemindersUseCase)
     factoryOf(::RescheduleRemindersUseCase)
+    factoryOf(::ScheduleTestRemindersUseCase)
+    factoryOf(::ClearDeliveredNotificationsUseCase)
 }

@@ -19,8 +19,9 @@ class ReminderReceiver : BroadcastReceiver(), KoinComponent {
         val id = intent.getIntExtra(EXTRA_ID, INVALID_ID)
         val title = intent.getStringExtra(EXTRA_TITLE)
         val body = intent.getStringExtra(EXTRA_BODY)
+        val badgeNumber = intent.getIntExtra(EXTRA_BADGE, 1)
         if (id != INVALID_ID && title != null && body != null) {
-            ReminderNotifications.show(context, id, title, body)
+            ReminderNotifications.show(context, id, title, body, badgeNumber)
         }
 
         val pendingResult = goAsync()
@@ -38,6 +39,7 @@ class ReminderReceiver : BroadcastReceiver(), KoinComponent {
         const val EXTRA_ID = "extra_reminder_id"
         const val EXTRA_TITLE = "extra_reminder_title"
         const val EXTRA_BODY = "extra_reminder_body"
+        const val EXTRA_BADGE = "extra_reminder_badge"
         private const val INVALID_ID = -1
     }
 }

@@ -21,4 +21,6 @@ data class SettingsUiState(
 
 sealed interface SettingsEvent {
     data object NotificationPermissionDenied : SettingsEvent
+    data class TestNotificationsScheduled(val count: Int) : SettingsEvent
+    data object TestNotificationsNeedPermission : SettingsEvent
 }
