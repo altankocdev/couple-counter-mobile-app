@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,7 +26,12 @@ import com.altankoc.couplecounter.presentation.theme.ThemePalettes
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val STARTUP_FADE_MILLIS = 350
-private val LaunchBackground = ThemePalettes.Terracotta.surface
+
+// Açılışta, kullanıcının teması yüklenmeden önce gösterilen marka gradyanı.
+private val LaunchGradient = Brush.verticalGradient(
+    colorStops = ThemePalettes.Terracotta.gradientStops.toTypedArray()
+)
+
 @Composable
 fun App() {
     val viewModel = koinViewModel<AppViewModel>()
@@ -61,7 +67,7 @@ private fun ReadyContent(state: AppUiState.Ready) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LaunchBackground)
+            .background(LaunchGradient)
     ) {
         CoupleCounterTheme(palette = palette) {
             GradientBackground(
@@ -78,6 +84,6 @@ private fun LaunchPlaceholder() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LaunchBackground)
+            .background(LaunchGradient)
     )
 }

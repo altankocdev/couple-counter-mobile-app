@@ -26,10 +26,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,35 +35,41 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 internal const val COUNTER_CHANGE_OUT_MILLIS = 220
 internal const val COUNTER_CHANGE_IN_MILLIS = 520
 internal const val COUNTER_CHANGE_IN_DELAY_MILLIS = 120
 
-private const val RING_GAP_DEGREES = 28f
 private const val RING_WIDTH_FRACTION = 0.64f
-private const val UNIT_SIZE_FRACTION = 0.20f
+private const val UNIT_SIZE_FRACTION = 0.18f
 private const val PRESSED_SCALE = 0.93f
 private const val GLOW_MILLIS = 800
 private const val GLOW_MAX_ALPHA = 0.32f
 private const val HALO_MAX_ALPHA = 0.5f
 private const val HALO_EXPANSION = 0.16f
 private const val TEXT_SLIDE_DIVISOR = 5
+
+// Ana ekranda logo kuyrukları sakin dursun diye daha yavaş döner ve daha incedir.
+private const val COMET_TURN_DURATION_SCALE = 2.1f
+private const val COMET_WIDTH_SCALE = 0.55f
+
+// Yazı, iç kuyruğun içinde kalan alana sığacak şekilde gerekirse küçültülür.
+private const val TEXT_MAX_WIDTH_FRACTION = 0.62f
+private const val TEXT_MAX_HEIGHT_FRACTION = 0.50f
 private val MaxRingSize = 280.dp
-private val HeartSize = 14.dp
 
 private data class RingText(val value: String, val unit: String)
 
@@ -101,14 +105,6 @@ fun CounterRing(
         val ringSize = minOf(maxWidth * RING_WIDTH_FRACTION, MaxRingSize)
         val unitSize = with(density) { (ringSize * UNIT_SIZE_FRACTION).toSp() }
 
-        val ringBrush = Brush.sweepGradient(
-            listOf(
-                palette.contentSecondary,
-                palette.contentBottom.copy(alpha = 0.25f),
-                palette.contentSecondary.copy(alpha = 0.8f),
-                palette.contentSecondary
-            )
-        )
         val glowColor = palette.contentBottom
 
         val clickModifier = if (onClick != null) {
@@ -137,6 +133,17 @@ fun CounterRing(
                 .then(clickModifier),
             contentAlignment = Alignment.Center
         ) {
+            BreathingGlow(color = palette.contentBottom)
+
+            DuoClockLogo(
+                modifier = Modifier.matchParentSize(),
+                showDial = false,
+                turnDurationScale = COMET_TURN_DURATION_SCALE,
+                cometWidthScale = COMET_WIDTH_SCALE
+            )
+
+            SecondsOrbit(color = palette.contentBottom)
+
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 1.5.dp.toPx()
                 val inset = strokeWidth / 2
@@ -163,16 +170,6 @@ fun CounterRing(
                         style = Stroke(width = strokeWidth)
                     )
                 }
-
-                drawArc(
-                    brush = ringBrush,
-                    startAngle = 90f + RING_GAP_DEGREES / 2,
-                    sweepAngle = 360f - RING_GAP_DEGREES,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = Size(size.width - strokeWidth, size.height - strokeWidth),
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
             }
 
             AnimatedContent(
@@ -212,7 +209,12 @@ fun CounterRing(
                 label = "counterRingText"
             ) { text ->
                 val numberSize = with(density) { (ringSize * numberFractionFor(text.value)).toSp() }
-                Row {
+                Row(
+                    modifier = Modifier.scaleToFit(
+                        maxWidth = ringSize * TEXT_MAX_WIDTH_FRACTION,
+                        maxHeight = ringSize * TEXT_MAX_HEIGHT_FRACTION
+                    )
+                ) {
                     Text(
                         text = text.value,
                         modifier = Modifier.alignByBaseline(),
@@ -236,23 +238,35 @@ fun CounterRing(
                     )
                 }
             }
-
-            Icon(
-                imageVector = AppIcons.Heart,
-                contentDescription = null,
-                tint = palette.accent,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = HeartSize / 2)
-                    .size(HeartSize)
-            )
         }
     }
 }
 
 private fun numberFractionFor(value: String): Float = when (value.length) {
-    1 -> 0.50f
-    2 -> 0.42f
-    3 -> 0.32f
-    else -> 0.26f
+    1 -> 0.44f
+    2 -> 0.38f
+    3 -> 0.30f
+    else -> 0.24f
+}
+
+/**
+ * İçeriği doğal boyutunda ölçer; verilen alana sığmıyorsa oranlarını koruyarak küçültür.
+ * Uzun sayılar ve birimler böylece halkanın kuyruklarına taşmaz.
+ */
+private fun Modifier.scaleToFit(maxWidth: Dp, maxHeight: Dp): Modifier = layout { measurable, _ ->
+    val placeable = measurable.measure(Constraints())
+    val widthScale = maxWidth.roundToPx().toFloat() / placeable.width.coerceAtLeast(1)
+    val heightScale = maxHeight.roundToPx().toFloat() / placeable.height.coerceAtLeast(1)
+    val scale = minOf(1f, widthScale, heightScale)
+    val width = (placeable.width * scale).roundToInt()
+    val height = (placeable.height * scale).roundToInt()
+    layout(width, height) {
+        placeable.placeWithLayer(
+            x = (width - placeable.width) / 2,
+            y = (height - placeable.height) / 2
+        ) {
+            scaleX = scale
+            scaleY = scale
+        }
+    }
 }
