@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,8 +25,7 @@ import com.altankoc.couplecounter.presentation.theme.ThemePalettes
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val STARTUP_FADE_MILLIS = 350
-private val LaunchBackground = Color(0xFF0B0B10)
-
+private val LaunchBackground = ThemePalettes.Terracotta.surface
 @Composable
 fun App() {
     val viewModel = koinViewModel<AppViewModel>()

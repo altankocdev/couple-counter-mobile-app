@@ -1,6 +1,6 @@
 package com.altankoc.couplecounter.presentation.common
 
 internal object AppInfo {
-    const val APP_NAME = "Couple Counter"
-    const val WELCOME_TEXT = "Couple Counter'a hoş geldiniz"
+    const val APP_NAME = "DuoClock"
+    const val WELCOME_TEXT = "DuoClock'a hoş geldiniz"
 }
