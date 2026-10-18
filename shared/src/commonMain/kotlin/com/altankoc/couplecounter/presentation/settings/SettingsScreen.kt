@@ -61,6 +61,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,7 +70,9 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.domain.model.NotificationPreferences
 import com.altankoc.couplecounter.domain.model.ThemeId
+import com.altankoc.couplecounter.presentation.common.AppInfo
 import com.altankoc.couplecounter.presentation.components.AppDatePickerDialog
+import com.altankoc.couplecounter.presentation.components.DuoClockLogo
 import com.altankoc.couplecounter.presentation.format.toDisplayText
 import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.notification.rememberNotificationPermissionRequester
@@ -91,6 +94,7 @@ private val ToggleWidth = 54.dp
 private val ToggleHeight = 32.dp
 private val ToggleThumbSize = 26.dp
 private val ToggleThumbPadding = 3.dp
+private val AboutLogoSize = 76.dp
 private const val TOAST_DURATION_MILLIS = 3_500L
 private const val DISABLED_ALPHA = 0.45f
 private const val DEVELOPER_MODE_TAP_COUNT = 7
@@ -252,6 +256,10 @@ fun SettingsScreen(
                 Spacer(Modifier.height(32.dp))
 
                 SectionLabel(text = "HAKKINDA")
+
+                AboutHeader(modifier = Modifier.align(Alignment.CenterHorizontally))
+
+                Spacer(Modifier.height(20.dp))
 
                 SettingsRow(
                     label = "Sürüm",
@@ -692,6 +700,29 @@ private fun MiniRing(theme: ThemePalette, modifier: Modifier = Modifier) {
                 .align(Alignment.BottomCenter)
                 .offset(y = 4.dp)
                 .size(8.dp)
+        )
+    }
+}
+
+@Composable
+private fun AboutHeader(modifier: Modifier = Modifier) {
+    val palette = CoupleCounterTheme.palette
+    val fonts = CoupleCounterTheme.fonts
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        DuoClockLogo(modifier = Modifier.size(AboutLogoSize))
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = AppInfo.APP_NAME,
+            style = TextStyle(
+                fontFamily = fonts.script,
+                fontSize = 34.sp,
+                lineHeight = 42.sp,
+                color = palette.contentBottom
+            )
         )
     }
 }

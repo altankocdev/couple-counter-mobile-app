@@ -1,6 +1,8 @@
 package com.altankoc.couplecounter.presentation.meeting
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,8 +32,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,8 +51,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.domain.model.ClockTime
 import com.altankoc.couplecounter.domain.model.MeetingCountdown
 import com.altankoc.couplecounter.presentation.components.AppDatePickerDialog
+import com.altankoc.couplecounter.presentation.components.DuoClockLogo
 import com.altankoc.couplecounter.presentation.components.FooterLabel
-import com.altankoc.couplecounter.presentation.components.HeartHourglass
 import com.altankoc.couplecounter.presentation.components.LineFramed
 import com.altankoc.couplecounter.presentation.components.RollingNumberText
 import com.altankoc.couplecounter.presentation.components.ScreenFooter
@@ -57,9 +63,18 @@ import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import com.altankoc.couplecounter.presentation.theme.TABULAR_NUMBERS
 import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.roundToInt
 
-private const val HOURGLASS_ASPECT_RATIO = 150f / 270f
-private val MaxHourglassHeight = 380.dp
+private const val CLOCK_REVEAL_MILLIS = 1_600
+// Yeni planlanan buluşmalarda da kuyruklar görünür olsun diye kullanılan alt sınır.
+private const val MIN_UPCOMING_REVEAL = 0.06f
+// İlerleme bu adımlara yuvarlanır; saniyelik güncellemeler animasyonu sürekli yeniden başlatmaz.
+private const val CLOCK_PROGRESS_STEP = 0.005f
+// Buluşma günü kuyruklar daha hızlı, coşkuyla döner.
+private const val TODAY_TURN_DURATION_SCALE = 0.6f
+// Henüz hiç gösterilmemiş saati belirten değer.
+private const val NOT_YET_REVEALED = -1f
+private val MaxClockSize = 310.dp
 private val DialogShape = RoundedCornerShape(28.dp)
 
 @Composable
@@ -83,6 +98,9 @@ fun MeetingScreen(
     val typography = MaterialTheme.typography
     var isPickerVisible by rememberSaveable { mutableStateOf(false) }
     var isCancelConfirmationVisible by rememberSaveable { mutableStateOf(false) }
+    // Saatin en son gösterdiği ilerleme; içerik geçici olarak kaybolsa bile korunması için
+    // koşullu bloğun dışında tutulur.
+    var displayedClockProgress by rememberSaveable { mutableFloatStateOf(NOT_YET_REVEALED) }
     val openPicker = { isPickerVisible = true }
 
     Column(
@@ -121,16 +139,16 @@ fun MeetingScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentAlignment = Alignment.BottomCenter
+                contentAlignment = Alignment.Center
             ) {
-                HeartHourglass(
-                    progress = countdown.hourglassProgress(),
-                    isRunning = countdown is MeetingCountdown.Upcoming,
-                    isComplete = countdown is MeetingCountdown.Today,
+                MeetingClock(
+                    countdown = countdown,
+                    displayedProgress = displayedClockProgress,
+                    onProgressDisplayed = { displayedClockProgress = it },
                     modifier = Modifier
-                        .heightIn(max = MaxHourglassHeight)
+                        .heightIn(max = MaxClockSize)
                         .fillMaxHeight()
-                        .aspectRatio(HOURGLASS_ASPECT_RATIO, matchHeightConstraintsFirst = true)
+                        .aspectRatio(1f, matchHeightConstraintsFirst = true)
                 )
             }
 
@@ -428,8 +446,61 @@ private fun ClockSeparator() {
     )
 }
 
-private fun MeetingCountdown.hourglassProgress(): Float = when (this) {
+/**
+ * Buluşmaya ne kadar yaklaşıldığını DuoClock logosuyla gösterir.
+ *
+ * - Kuyruklar buluşma yaklaştıkça uzar, kadranın işaretleri saat 12'den itibaren tek tek yanar.
+ * - Buluşma beklenirken yıldız tozu, kum saatinin kumu gibi saatin merkezine akar.
+ * - Buluşma günü saat tamamlanır; kuyruklar hızlanır, ışık halkaları ve dışarı taşan toz eşlik eder.
+ * - Saat ilk kez gösterildiğinde kuyruklar ve kadran sıfırdan güncel hallerine kadar dolarak gelir.
+ *   Son gösterilen ilerleme saklandığı için başka bir ekrandan dönüldüğünde animasyon baştan
+ *   oynamaz; yalnızca ilerleme gerçekten değiştiğinde yeni değere doğru akar.
+ */
+@Composable
+private fun MeetingClock(
+    countdown: MeetingCountdown,
+    displayedProgress: Float,
+    onProgressDisplayed: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val palette = CoupleCounterTheme.palette
+    val target = countdown.clockProgress()
+    val currentOnProgressDisplayed by rememberUpdatedState(onProgressDisplayed)
+    val reveal = remember {
+        Animatable(if (displayedProgress == NOT_YET_REVEALED) 0f else displayedProgress)
+    }
+    val isToday = countdown is MeetingCountdown.Today
+    val isUpcoming = countdown is MeetingCountdown.Upcoming
+
+    LaunchedEffect(target) {
+        reveal.animateTo(target, tween(CLOCK_REVEAL_MILLIS, easing = FastOutSlowInEasing))
+        currentOnProgressDisplayed(target)
+    }
+
+    Box(modifier = modifier) {
+        when {
+            isUpcoming -> Stardust(color = palette.contentBottom, flow = DustFlow.Inward)
+            isToday -> {
+                CelebrationPulse(color = palette.contentBottom)
+                Stardust(color = palette.contentBottom, flow = DustFlow.Outward)
+            }
+        }
+
+        DuoClockLogo(
+            modifier = Modifier.matchParentSize(),
+            reveal = reveal.value,
+            dialProgress = reveal.value,
+            isRotating = isUpcoming || isToday,
+            turnDurationScale = if (isToday) TODAY_TURN_DURATION_SCALE else 1f
+        )
+    }
+}
+
+private fun MeetingCountdown.clockProgress(): Float = when (this) {
     MeetingCountdown.NotScheduled, MeetingCountdown.Expired -> 0f
-    is MeetingCountdown.Upcoming -> progress
+    is MeetingCountdown.Upcoming -> {
+        val stepped = (progress / CLOCK_PROGRESS_STEP).roundToInt() * CLOCK_PROGRESS_STEP
+        stepped.coerceIn(MIN_UPCOMING_REVEAL, 1f)
+    }
     is MeetingCountdown.Today -> 1f
 }

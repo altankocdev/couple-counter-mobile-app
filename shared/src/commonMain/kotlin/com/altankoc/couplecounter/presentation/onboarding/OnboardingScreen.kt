@@ -5,7 +5,6 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -51,12 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
@@ -67,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.presentation.common.AppInfo
 import com.altankoc.couplecounter.presentation.components.AppDatePickerDialog
+import com.altankoc.couplecounter.presentation.components.DuoClockLogo
 import com.altankoc.couplecounter.presentation.format.toDisplayText
 import com.altankoc.couplecounter.presentation.icons.AppIcons
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
@@ -92,7 +89,6 @@ private const val INTRO_ITEMS_START_MILLIS = 500L
 private const val FEATURE_STAGGER_MILLIS = 250L
 private const val PREPARE_RING_MILLIS = 2_200
 private const val PREPARE_HOLD_MILLIS = 400L
-private const val HEART_PULSE_MILLIS = 700
 
 private const val BACKDROP_CYCLE_MILLIS = 24_000
 private const val PARTICLE_COUNT = 22
@@ -102,6 +98,8 @@ private const val GLOW_BLUR_RADIUS = 28f
 private val CardShape = RoundedCornerShape(28.dp)
 private val PillShape = RoundedCornerShape(50)
 private val MaxContentWidth = 380.dp
+private val WelcomeLogoSize = 132.dp
+private val PreparingLogoSize = 156.dp
 
 private class Feature(val icon: ImageVector, val text: String)
 
@@ -319,20 +317,24 @@ private fun WelcomeScene() {
         contentAlignment = Alignment.Center
     ) {
         FadeIn(delayMillis = WELCOME_BLANK_MILLIS, durationMillis = WELCOME_FADE_IN_MILLIS) {
-            Text(
-                text = AppInfo.WELCOME_TEXT,
-                style = TextStyle(
-                    fontFamily = fonts.script,
-                    fontSize = 58.sp,
-                    lineHeight = 70.sp,
-                    color = palette.contentBottom,
-                    textAlign = TextAlign.Center,
-                    shadow = Shadow(
-                        color = palette.contentBottom.copy(alpha = 0.45f),
-                        blurRadius = GLOW_BLUR_RADIUS
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                DuoClockLogo(modifier = Modifier.size(WelcomeLogoSize))
+                Spacer(Modifier.height(36.dp))
+                Text(
+                    text = AppInfo.WELCOME_TEXT,
+                    style = TextStyle(
+                        fontFamily = fonts.script,
+                        fontSize = 58.sp,
+                        lineHeight = 70.sp,
+                        color = palette.contentBottom,
+                        textAlign = TextAlign.Center,
+                        shadow = Shadow(
+                            color = palette.contentBottom.copy(alpha = 0.45f),
+                            blurRadius = GLOW_BLUR_RADIUS
+                        )
                     )
                 )
-            )
+            }
         }
     }
 }
@@ -497,78 +499,21 @@ private fun PreparingScene(onAnimationDone: () -> Unit) {
     val progress = remember { Animatable(0f) }
     val currentOnAnimationDone by rememberUpdatedState(onAnimationDone)
 
-    val transition = rememberInfiniteTransition(label = "preparing")
-    val pulse by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(HEART_PULSE_MILLIS, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "heartPulse"
-    )
-
     LaunchedEffect(Unit) {
         progress.animateTo(1f, tween(PREPARE_RING_MILLIS, easing = FastOutSlowInEasing))
         delay(PREPARE_HOLD_MILLIS)
         currentOnAnimationDone()
     }
 
-    val ringColor = palette.contentBottom
-
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier.size(140.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val strokeWidth = 2.dp.toPx()
-                val inset = strokeWidth / 2f
-                val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(ringColor.copy(alpha = 0.18f * progress.value), Color.Transparent),
-                        center = center,
-                        radius = size.minDimension / 2f
-                    ),
-                    radius = size.minDimension / 2f,
-                    center = center
-                )
-                drawArc(
-                    color = ringColor.copy(alpha = 0.15f),
-                    startAngle = 0f,
-                    sweepAngle = 360f,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = arcSize,
-                    style = Stroke(width = strokeWidth)
-                )
-                drawArc(
-                    color = ringColor,
-                    startAngle = -90f,
-                    sweepAngle = 360f * progress.value,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = arcSize,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
-            }
-            Icon(
-                imageVector = AppIcons.Heart,
-                contentDescription = null,
-                tint = palette.contentBottom,
-                modifier = Modifier
-                    .size(28.dp)
-                    .graphicsLayer {
-                        scaleX = pulse
-                        scaleY = pulse
-                    }
-            )
-        }
+        DuoClockLogo(
+            modifier = Modifier.size(PreparingLogoSize),
+            reveal = progress.value
+        )
 
         Spacer(Modifier.height(28.dp))
 
