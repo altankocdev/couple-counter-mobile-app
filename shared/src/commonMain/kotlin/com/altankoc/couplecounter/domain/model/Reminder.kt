@@ -24,6 +24,7 @@ object ReminderIds {
     const val MEETING_COUNT = 4
     const val RELATIONSHIP_BASE = 2_000
     const val RELATIONSHIP_MAX_COUNT = 40
+    const val TEST_BASE = 9_000
 
     val all: List<Int> =
         (MEETING_BASE until MEETING_BASE + MEETING_COUNT).toList() +

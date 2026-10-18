@@ -26,12 +26,13 @@ internal object ReminderNotifications {
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = CHANNEL_DESCRIPTION
+            setShowBadge(true)
         }
         context.getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
     }
 
     @SuppressLint("MissingPermission")
-    fun show(context: Context, id: Int, title: String, body: String) {
+    fun show(context: Context, id: Int, title: String, body: String, badgeNumber: Int) {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 
@@ -50,10 +51,16 @@ internal object ReminderNotifications {
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setNumber(badgeNumber)
+            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .setAutoCancel(true)
             .setContentIntent(openAppIntent)
             .build()
 
         runCatching { manager.notify(id, notification) }
+    }
+
+    fun clearAll(context: Context) {
+        NotificationManagerCompat.from(context).cancelAll()
     }
 }

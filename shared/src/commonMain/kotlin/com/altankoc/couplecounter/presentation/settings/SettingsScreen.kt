@@ -5,6 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -49,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -92,8 +94,12 @@ private val ToggleThumbSize = 26.dp
 private val ToggleThumbPadding = 3.dp
 private const val TOAST_DURATION_MILLIS = 3_500L
 private const val DISABLED_ALPHA = 0.45f
+private const val DEVELOPER_MODE_TAP_COUNT = 7
 private const val PERMISSION_DENIED_MESSAGE =
     "Bildirim izni verilmedi. Tekrar dokunarak ayarlardan açabilirsiniz."
+private const val TEST_NEEDS_PERMISSION_MESSAGE =
+    "Test için önce bildirimlere izin verin."
+private const val DEVELOPER_MODE_MESSAGE = "Geliştirici bölümü açıldı."
 
 @Composable
 fun SettingsRoot(
@@ -113,8 +119,11 @@ fun SettingsRoot(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            when (event) {
-                SettingsEvent.NotificationPermissionDenied -> toastMessage = PERMISSION_DENIED_MESSAGE
+            toastMessage = when (event) {
+                SettingsEvent.NotificationPermissionDenied -> PERMISSION_DENIED_MESSAGE
+                SettingsEvent.TestNotificationsNeedPermission -> TEST_NEEDS_PERMISSION_MESSAGE
+                is SettingsEvent.TestNotificationsScheduled ->
+                    "${event.count} test bildirimi 1 dakika sonra gelmeye başlayacak. Uygulamayı kapatabilirsiniz."
             }
         }
     }
@@ -139,7 +148,9 @@ fun SettingsRoot(
                 requestNotificationPermission()
             }
         },
-        onNotificationPreferencesChanged = viewModel::onNotificationPreferencesChanged
+        onNotificationPreferencesChanged = viewModel::onNotificationPreferencesChanged,
+        onTestNotificationsClick = viewModel::onTestNotificationsRequested,
+        onDeveloperModeUnlocked = { toastMessage = DEVELOPER_MODE_MESSAGE }
     )
 }
 
@@ -152,11 +163,15 @@ fun SettingsScreen(
     onRelationshipStartDateSelected: (LocalDate) -> Unit,
     onNotificationsMasterClick: () -> Unit,
     onNotificationPreferencesChanged: (NotificationPreferences) -> Unit,
+    onTestNotificationsClick: () -> Unit,
+    onDeveloperModeUnlocked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = CoupleCounterTheme.palette
     val selectedThemeId = uiState.selectedThemeId ?: ThemePalettes.Default.id
     var isPickerVisible by rememberSaveable { mutableStateOf(false) }
+    var isDeveloperMode by rememberSaveable { mutableStateOf(false) }
+    var versionTapCount by remember { mutableIntStateOf(0) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -239,9 +254,43 @@ fun SettingsScreen(
 
                 SectionLabel(text = "HAKKINDA")
 
-                SettingsRow(label = "Sürüm", value = AppInfo.VERSION_NAME)
+                SettingsRow(
+                    label = "Sürüm",
+                    value = AppInfo.VERSION_NAME,
+                    onClick = {
+                        if (!isDeveloperMode) {
+                            versionTapCount++
+                            if (versionTapCount >= DEVELOPER_MODE_TAP_COUNT) {
+                                isDeveloperMode = true
+                                onDeveloperModeUnlocked()
+                            }
+                        }
+                    }
+                )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(label = "Gizlilik politikası", value = "Yakında")
+
+                AnimatedVisibility(
+                    visible = isDeveloperMode,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut()
+                ) {
+                    Column {
+                        Spacer(Modifier.height(32.dp))
+                        SectionLabel(text = "GELİŞTİRİCİ")
+                        SettingsRow(
+                            label = "Tüm bildirimleri test et",
+                            value = "Gönder",
+                            onClick = onTestNotificationsClick
+                        )
+                        Text(
+                            text = "7 bildirim 1 dakika sonra başlayıp 8'er saniye arayla gelir. Uygulamayı kapatıp bekleyebilirsiniz.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.contentSecondary,
+                            modifier = Modifier.padding(horizontal = ScreenPadding + 4.dp, vertical = 8.dp)
+                        )
+                    }
+                }
 
                 Spacer(Modifier.height(40.dp))
 

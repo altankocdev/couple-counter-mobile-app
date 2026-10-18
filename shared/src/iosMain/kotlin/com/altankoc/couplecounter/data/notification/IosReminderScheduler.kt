@@ -7,26 +7,49 @@ import com.altankoc.couplecounter.presentation.notification.ReminderMessageForma
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import platform.Foundation.NSDateComponents
+import platform.Foundation.NSNumber
+import platform.UIKit.UIApplication
 import platform.UserNotifications.UNCalendarNotificationTrigger
 import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNNotificationSound
 import platform.UserNotifications.UNUserNotificationCenter
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 
 internal class IosReminderScheduler : ReminderScheduler {
 
-    override suspend fun replaceAll(reminders: List<Reminder>) {
-        val center = UNUserNotificationCenter.currentNotificationCenter()
-        center.removePendingNotificationRequestsWithIdentifiers(ReminderIds.all.map { it.toString() })
+    private val center: UNUserNotificationCenter
+        get() = UNUserNotificationCenter.currentNotificationCenter()
 
+    override suspend fun replaceAll(reminders: List<Reminder>) {
+        center.removePendingNotificationRequestsWithIdentifiers(ReminderIds.all.map { it.toString() })
+        scheduleInternal(reminders)
+    }
+
+    override suspend fun schedule(reminders: List<Reminder>) {
+        scheduleInternal(reminders)
+    }
+
+    @Suppress("DEPRECATION")
+    override suspend fun clearDeliveredNotifications() {
+        center.removeAllDeliveredNotifications()
+        dispatch_async(dispatch_get_main_queue()) {
+            UIApplication.sharedApplication.applicationIconBadgeNumber = 0
+        }
+    }
+
+    private fun scheduleInternal(reminders: List<Reminder>) {
         val timeZone = TimeZone.currentSystemDefault()
-        reminders.forEach { reminder ->
+
+        reminders.sortedBy { it.triggerAt }.forEachIndexed { index, reminder ->
             val message = ReminderMessageFormatter.format(reminder.event)
 
             val content = UNMutableNotificationContent().apply {
                 setTitle(message.title)
                 setBody(message.body)
                 setSound(UNNotificationSound.defaultSound())
+                setBadge(NSNumber(int = index + 1))
             }
 
             val local = reminder.triggerAt.toLocalDateTime(timeZone)

@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.presentation.app.AppUiState
 import com.altankoc.couplecounter.presentation.app.AppViewModel
@@ -31,6 +32,11 @@ private val LaunchBackground = Color(0xFF0B0B10)
 fun App() {
     val viewModel = koinViewModel<AppViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onAppResumed()
+        onPauseOrDispose { }
+    }
 
     when (val state = uiState) {
         AppUiState.Loading -> LaunchPlaceholder()

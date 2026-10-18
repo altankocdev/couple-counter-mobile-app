@@ -9,6 +9,7 @@ import com.altankoc.couplecounter.domain.repository.NotificationPermissionProvid
 import com.altankoc.couplecounter.domain.repository.RelationshipRepository
 import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
+import com.altankoc.couplecounter.domain.usecase.ScheduleTestRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
 import com.altankoc.couplecounter.presentation.notification.NotificationPermissionResult
 import kotlinx.coroutines.channels.Channel
@@ -32,6 +33,7 @@ class SettingsViewModel(
     private val setRelationshipStartDate: SetRelationshipStartDateUseCase,
     private val notificationPermissionProvider: NotificationPermissionProvider,
     private val rescheduleReminders: RescheduleRemindersUseCase,
+    private val scheduleTestReminders: ScheduleTestRemindersUseCase,
     private val clock: Clock,
     private val timeZone: TimeZone
 ) : ViewModel() {
@@ -97,6 +99,17 @@ class SettingsViewModel(
         viewModelScope.launch {
             userPreferencesRepository.setNotificationPreferences(preferences)
             rescheduleReminders()
+        }
+    }
+
+    fun onTestNotificationsRequested() {
+        viewModelScope.launch {
+            if (!notificationPermissionProvider.isGranted()) {
+                _events.send(SettingsEvent.TestNotificationsNeedPermission)
+                return@launch
+            }
+            val count = scheduleTestReminders()
+            _events.send(SettingsEvent.TestNotificationsScheduled(count))
         }
     }
 
