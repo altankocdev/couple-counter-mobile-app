@@ -11,6 +11,7 @@ import com.altankoc.couplecounter.domain.repository.UserPreferencesRepository
 import com.altankoc.couplecounter.domain.usecase.RescheduleRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.ScheduleTestRemindersUseCase
 import com.altankoc.couplecounter.domain.usecase.SetRelationshipStartDateUseCase
+import com.altankoc.couplecounter.presentation.common.AppEnvironment
 import com.altankoc.couplecounter.presentation.notification.NotificationPermissionResult
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +35,7 @@ class SettingsViewModel(
     private val notificationPermissionProvider: NotificationPermissionProvider,
     private val rescheduleReminders: RescheduleRemindersUseCase,
     private val scheduleTestReminders: ScheduleTestRemindersUseCase,
+    private val appEnvironment: AppEnvironment,
     private val clock: Clock,
     private val timeZone: TimeZone
 ) : ViewModel() {
@@ -49,8 +51,7 @@ class SettingsViewModel(
         userPreferencesRepository.notificationPreferences,
         isPermissionGranted
     ) { startDate, themeId, notificationPreferences, permissionGranted ->
-        SettingsUiState(
-            today = clock.todayIn(timeZone),
+        initialUiState().copy(
             relationshipStartDate = startDate,
             selectedThemeId = themeId,
             isNotificationPermissionGranted = permissionGranted,
@@ -59,7 +60,7 @@ class SettingsViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-        initialValue = SettingsUiState(today = clock.todayIn(timeZone))
+        initialValue = initialUiState()
     )
 
     init {
@@ -103,6 +104,7 @@ class SettingsViewModel(
     }
 
     fun onTestNotificationsRequested() {
+        if (!appEnvironment.isDebug) return
         viewModelScope.launch {
             if (!notificationPermissionProvider.isGranted()) {
                 _events.send(SettingsEvent.TestNotificationsNeedPermission)
@@ -126,6 +128,12 @@ class SettingsViewModel(
             }
         }
     }
+
+    private fun initialUiState(): SettingsUiState = SettingsUiState(
+        today = clock.todayIn(timeZone),
+        versionName = appEnvironment.versionName,
+        isDeveloperOptionsAvailable = appEnvironment.isDebug
+    )
 
     private suspend fun updateNotificationsEnabled(enabled: Boolean) {
         val current = userPreferencesRepository.notificationPreferences.first()

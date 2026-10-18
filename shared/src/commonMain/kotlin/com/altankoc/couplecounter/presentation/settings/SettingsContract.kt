@@ -7,6 +7,8 @@ import kotlinx.datetime.LocalDate
 
 data class SettingsUiState(
     val today: LocalDate,
+    val versionName: String,
+    val isDeveloperOptionsAvailable: Boolean,
     val relationshipStartDate: LocalDate? = null,
     val selectedThemeId: ThemeId? = null,
     val isNotificationPermissionGranted: Boolean = false,
