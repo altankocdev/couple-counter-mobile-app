@@ -7,6 +7,8 @@ import com.altankoc.couplecounter.data.notification.IosNotificationPermissionPro
 import com.altankoc.couplecounter.data.notification.IosReminderScheduler
 import com.altankoc.couplecounter.domain.repository.NotificationPermissionProvider
 import com.altankoc.couplecounter.domain.repository.ReminderScheduler
+import com.altankoc.couplecounter.presentation.common.AppEnvironment
+import com.altankoc.couplecounter.presentation.common.IosAppEnvironment
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -21,4 +23,5 @@ private val iosPlatformModule: Module = module {
     single<DataStore<Preferences>> { createDataStore() }
     single<ReminderScheduler> { IosReminderScheduler() }
     single<NotificationPermissionProvider> { IosNotificationPermissionProvider() }
+    single<AppEnvironment> { IosAppEnvironment() }
 }

@@ -6,6 +6,7 @@ import com.altankoc.couplecounter.di.initKoin
 import com.altankoc.couplecounter.domain.repository.ReminderScheduler
 import com.altankoc.couplecounter.notification.AndroidReminderScheduler
 import com.altankoc.couplecounter.notification.ReminderNotifications
+import com.altankoc.couplecounter.presentation.common.AppEnvironment
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -16,11 +17,12 @@ class CoupleCounterApplication : Application() {
         ReminderNotifications.createChannel(this)
         initKoin(
             context = this,
-            additionalModules = listOf(notificationModule(applicationContext))
+            additionalModules = listOf(androidAppModule(applicationContext))
         )
     }
 }
 
-private fun notificationModule(context: Context): Module = module {
+private fun androidAppModule(context: Context): Module = module {
     single<ReminderScheduler> { AndroidReminderScheduler(context) }
+    single<AppEnvironment> { AndroidAppEnvironment() }
 }

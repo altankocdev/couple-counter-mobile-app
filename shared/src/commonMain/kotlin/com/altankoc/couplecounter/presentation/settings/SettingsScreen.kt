@@ -69,7 +69,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.altankoc.couplecounter.domain.model.NotificationPreferences
 import com.altankoc.couplecounter.domain.model.ThemeId
-import com.altankoc.couplecounter.presentation.common.AppInfo
 import com.altankoc.couplecounter.presentation.components.AppDatePickerDialog
 import com.altankoc.couplecounter.presentation.format.toDisplayText
 import com.altankoc.couplecounter.presentation.icons.AppIcons
@@ -256,22 +255,26 @@ fun SettingsScreen(
 
                 SettingsRow(
                     label = "Sürüm",
-                    value = AppInfo.VERSION_NAME,
-                    onClick = {
-                        if (!isDeveloperMode) {
-                            versionTapCount++
-                            if (versionTapCount >= DEVELOPER_MODE_TAP_COUNT) {
-                                isDeveloperMode = true
-                                onDeveloperModeUnlocked()
+                    value = uiState.versionName,
+                    onClick = if (uiState.isDeveloperOptionsAvailable) {
+                        {
+                            if (!isDeveloperMode) {
+                                versionTapCount++
+                                if (versionTapCount >= DEVELOPER_MODE_TAP_COUNT) {
+                                    isDeveloperMode = true
+                                    onDeveloperModeUnlocked()
+                                }
                             }
                         }
+                    } else {
+                        null
                     }
                 )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(label = "Gizlilik politikası", value = "Yakında")
 
                 AnimatedVisibility(
-                    visible = isDeveloperMode,
+                    visible = uiState.isDeveloperOptionsAvailable && isDeveloperMode,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut()
                 ) {
