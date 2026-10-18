@@ -15,19 +15,19 @@ object ReminderMessageFormatter {
         title = AppInfo.APP_NAME,
         body = when (event) {
             is ReminderEvent.MeetingInOneMonth ->
-                "1 ay sonra buluşuyorsunuz ♥"
+                "1 ay sonra buluşuyorsunuz $NotificationHeart"
             is ReminderEvent.MeetingInOneWeek ->
-                "1 hafta sonra buluşuyorsunuz ♥"
+                "1 hafta sonra buluşuyorsunuz $NotificationHeart"
             is ReminderEvent.MeetingTomorrow ->
-                "Yarın, ${event.meetingDate.toDayMonthWeekdayText()}, buluşuyorsunuz ♥"
+                "Yarın, ${event.meetingDate.toDayMonthWeekdayText()}, buluşuyorsunuz $NotificationHeart"
             is ReminderEvent.MeetingToday ->
-                "Bugün buluşuyorsunuz! ${event.meetingDate.toDayMonthWeekdayText()} ♥"
+                "Bugün buluşuyorsunuz! ${event.meetingDate.toDayMonthWeekdayText()} $NotificationHeart"
             is ReminderEvent.YearAnniversary ->
-                "Bugün ${event.years}. yıl dönümünüz ♥"
+                "Bugün ${event.years}. yıl dönümünüz $NotificationHeart"
             is ReminderEvent.MonthAnniversary ->
-                "Bugün ${event.months}. ayınız ♥"
+                "Bugün ${event.months}. ayınız $NotificationHeart"
             is ReminderEvent.DayMilestone ->
-                "Bugün birlikteliğinizin ${event.days}. günü ♥"
+                "Bugün birlikteliğinizin ${event.days}. günü $NotificationHeart"
         }
     )
 }
