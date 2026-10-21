@@ -5,6 +5,8 @@ import com.altankoc.couplecounter.presentation.elapsed.ElapsedViewModel
 import com.altankoc.couplecounter.presentation.meeting.MeetingViewModel
 import com.altankoc.couplecounter.presentation.onboarding.OnboardingViewModel
 import com.altankoc.couplecounter.presentation.settings.SettingsViewModel
+import com.altankoc.couplecounter.presentation.widget.WidgetSnapshotLoader
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -14,4 +16,5 @@ internal val presentationModule = module {
     viewModelOf(::ElapsedViewModel)
     viewModelOf(::MeetingViewModel)
     viewModelOf(::SettingsViewModel)
+    factoryOf(::WidgetSnapshotLoader)
 }

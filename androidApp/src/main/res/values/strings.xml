@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">DuoClock</string>
+    <string name="widget_description">Birlikte geçen zaman ve bir sonraki buluşma</string>
+    <string name="widget_elapsed_caption">NE ZAMANDIR BİRLİKTEYİZ</string>
+    <string name="widget_meeting_caption">NE ZAMAN BULUŞUYORUZ</string>
+    <string name="widget_value_placeholder">—</string>
+    <string name="widget_setup_hint">Başlamak için dokunun</string>
 </resources>

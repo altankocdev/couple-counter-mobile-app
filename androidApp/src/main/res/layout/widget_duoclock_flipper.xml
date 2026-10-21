@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/widget_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+
+    <ImageView
+        android:id="@+id/widget_decoration"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitEnd" />
+
+    <ViewFlipper
+        android:id="@+id/widget_flipper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true"
+        android:flipInterval="@integer/widget_flip_interval_millis"
+        android:inAnimation="@android:anim/fade_in"
+        android:outAnimation="@android:anim/fade_out">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/widget_padding_horizontal"
+            android:paddingVertical="@dimen/widget_padding_vertical">
+
+            <ImageView
+                android:id="@+id/elapsed_logo"
+                android:layout_width="@dimen/widget_logo_size"
+                android:layout_height="@dimen/widget_logo_size"
+                android:contentDescription="@string/app_name" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/widget_content_spacing"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/elapsed_caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.15"
+                    android:text="@string/widget_elapsed_caption"
+                    android:textColor="#B3FDEDE7"
+                    android:textSize="10sp" />
+
+                <ViewFlipper
+                    android:id="@+id/elapsed_switcher"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/widget_value_height"
+                    android:animateFirstView="false"
+                    android:autoStart="false"
+                    android:inAnimation="@anim/widget_value_in"
+                    android:outAnimation="@anim/widget_value_out">
+
+                    <TextView
+                        android:id="@+id/elapsed_detailed"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:autoSizeMaxTextSize="24sp"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="serif"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:text="@string/widget_value_placeholder"
+                        android:textColor="#FFFDEDE7" />
+
+                    <TextView
+                        android:id="@+id/elapsed_total_days"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:autoSizeMaxTextSize="24sp"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="serif"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:text="@string/widget_value_placeholder"
+                        android:textColor="#FFFDEDE7" />
+                </ViewFlipper>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/widget_padding_horizontal"
+            android:paddingVertical="@dimen/widget_padding_vertical">
+
+            <ImageView
+                android:id="@+id/meeting_logo"
+                android:layout_width="@dimen/widget_logo_size"
+                android:layout_height="@dimen/widget_logo_size"
+                android:contentDescription="@string/app_name" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/widget_content_spacing"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/meeting_caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.15"
+                    android:text="@string/widget_meeting_caption"
+                    android:textColor="#B3FDEDE7"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/meeting_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/widget_value_height"
+                    android:autoSizeMaxTextSize="24sp"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="serif"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:text="@string/widget_value_placeholder"
+                    android:textColor="#FFFDEDE7" />
+            </LinearLayout>
+        </LinearLayout>
+    </ViewFlipper>
+</FrameLayout>

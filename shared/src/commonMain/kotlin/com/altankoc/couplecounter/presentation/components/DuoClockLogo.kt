@@ -26,59 +26,49 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.CENTER_DOT_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.CENTER_GLOW_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.CENTER_GLOW_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.COMET_ALPHA_STOPS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.COMET_SEAM_PADDING_DEGREES
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.COMET_SEGMENTS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.COMET_SWEEP_DEGREES
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.COMET_WIDTH
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.CONTENT_EXTENT
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.DEGREES_PER_MINUTE
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.DIAL_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.HEAD_GLOW_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.HOUR_DOT_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.HOUR_DOT_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.HOUR_MARKS_PER_MAJOR_TICK
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.INNER_COMET_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.INNER_COMET_START_DEGREES
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.INNER_HEAD_GLOW_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MAJOR_TICK_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MAJOR_TICK_LENGTH
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MAJOR_TICK_WIDTH
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MINUTES_PER_HOUR_MARK
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MINUTES_PER_TURN
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MINUTE_DOT_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.MINUTE_DOT_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.OUTER_COMET_RADIUS
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.OUTER_COMET_START_DEGREES
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.OUTER_HEAD_GLOW_ALPHA
+import com.altankoc.couplecounter.presentation.components.DuoClockGeometry.TWELVE_O_CLOCK_DEGREES
 import com.altankoc.couplecounter.presentation.theme.CoupleCounterTheme
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-// Tüm oranlar logonun yarı genişliğine göredir ve uygulama ikonuyla birebir aynıdır.
-private const val OUTER_COMET_RADIUS = 0.922f
-private const val INNER_COMET_RADIUS = 0.761f
-private const val COMET_WIDTH = 0.108f
-private const val COMET_TAIL_WIDTH_RATIO = 0.12f
-private const val COMET_SWEEP_DEGREES = 230f
-private const val OUTER_COMET_START_DEGREES = -190f
-private const val INNER_COMET_START_DEGREES = 10f
-private const val COMET_SEGMENTS = 64
-private const val COMET_ALPHA_STOPS = 8
-private const val COMET_MIN_ALPHA = 0.04f
-private const val COMET_ALPHA_CURVE = 1.5f
-internal const val COMET_SEAM_PADDING_DEGREES = 2f
-
-private const val HEAD_GLOW_RADIUS = 0.31f
-private const val OUTER_HEAD_GLOW_ALPHA = 0.45f
-private const val INNER_HEAD_GLOW_ALPHA = 0.42f
-private const val CENTER_GLOW_RADIUS = 0.95f
-private const val CENTER_GLOW_ALPHA = 0.22f
-
-private const val DIAL_RADIUS = 0.556f
-private const val MAJOR_TICK_LENGTH = 0.089f
-private const val MAJOR_TICK_WIDTH = 0.042f
-private const val HOUR_DOT_RADIUS = 0.024f
-private const val MINUTE_DOT_RADIUS = 0.0094f
-private const val CENTER_DOT_RADIUS = 0.044f
-private const val MAJOR_TICK_ALPHA = 0.95f
-private const val HOUR_DOT_ALPHA = 0.85f
-private const val MINUTE_DOT_ALPHA = 0.45f
 // Kadranın henüz "dolmamış" kısmındaki işaretler bu oranda sönük çizilir.
 private const val UNLIT_DIAL_ALPHA_SCALE = 0.28f
 
-private const val MINUTES_PER_TURN = 60
-private const val MINUTES_PER_HOUR_MARK = 5
-private const val HOUR_MARKS_PER_MAJOR_TICK = 3
-private const val DEGREES_PER_MINUTE = 6f
-private const val TWELVE_O_CLOCK_DEGREES = -90f
 private const val FULL_TURN_DEGREES = 360f
 private const val DEGREES_TO_RADIANS = (PI / 180.0).toFloat()
 
 private const val OUTER_TURN_MILLIS = 12_000
 private const val INNER_TURN_MILLIS = 18_000
-
-// Kuyruk katmanı, baş parıltısı dönerken kırpılmasın diye logodan büyük ölçülür
-// (dış yarıçap + parıltı yarıçapı ≈ 1.23).
-private const val COMET_LAYER_OVERSCAN = 1.3f
 
 /**
  * DuoClock logosu: iç içe dönen iki ışık kuyruğu ve ortada soyut bir saat kadranı.
@@ -192,10 +182,10 @@ private fun BoxScope.CometLayer(
     Spacer(
         modifier = Modifier
             .matchParentSize()
-            .overscan(COMET_LAYER_OVERSCAN)
+            .overscan(CONTENT_EXTENT)
             .graphicsLayer { rotationZ = rotation.value }
             .drawWithCache {
-                val unit = size.minDimension / 2f / COMET_LAYER_OVERSCAN
+                val unit = size.minDimension / 2f / CONTENT_EXTENT
                 val origin = size.center
                 val sweep = COMET_SWEEP_DEGREES * progress
                 val comet = if (sweep > 0f) {
@@ -267,13 +257,13 @@ internal class CometGeometry(
             for (i in 0..COMET_SEGMENTS) {
                 val fraction = i / COMET_SEGMENTS.toFloat()
                 val angle = (pad + sweepDegrees * fraction) * DEGREES_TO_RADIANS
-                val point = pointOnCircle(origin, radius + cometHalfWidth(width, fraction), angle)
+                val point = pointOnCircle(origin, radius + DuoClockGeometry.cometHalfWidth(width, fraction), angle)
                 if (i == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
             }
             for (i in COMET_SEGMENTS downTo 0) {
                 val fraction = i / COMET_SEGMENTS.toFloat()
                 val angle = (pad + sweepDegrees * fraction) * DEGREES_TO_RADIANS
-                val point = pointOnCircle(origin, radius - cometHalfWidth(width, fraction), angle)
+                val point = pointOnCircle(origin, radius - DuoClockGeometry.cometHalfWidth(width, fraction), angle)
                 path.lineTo(point.x, point.y)
             }
             path.close()
@@ -284,7 +274,7 @@ internal class CometGeometry(
                 } else {
                     val fraction = (index - 1) / COMET_ALPHA_STOPS.toFloat()
                     val position = (pad + sweepDegrees * fraction) / FULL_TURN_DEGREES
-                    val alpha = COMET_MIN_ALPHA + (1f - COMET_MIN_ALPHA) * fraction.pow(COMET_ALPHA_CURVE)
+                    val alpha = DuoClockGeometry.cometAlpha(fraction)
                     position to color.copy(alpha = alpha)
                 }
             }
@@ -346,9 +336,6 @@ private fun DrawScope.drawDial(color: Color, unit: Float, origin: Offset, litFra
 
     drawCircle(color = color, radius = unit * CENTER_DOT_RADIUS, center = origin)
 }
-
-private fun cometHalfWidth(width: Float, fraction: Float): Float =
-    width * (COMET_TAIL_WIDTH_RATIO + (1f - COMET_TAIL_WIDTH_RATIO) * fraction) / 2f
 
 private fun pointOnCircle(origin: Offset, radius: Float, angleRadians: Float): Offset =
     Offset(

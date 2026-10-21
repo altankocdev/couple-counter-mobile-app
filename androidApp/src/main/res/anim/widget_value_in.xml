@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/widget_value_fade_in_millis"
+    android:fromAlpha="0"
+    android:interpolator="@android:interpolator/decelerate_quad"
+    android:startOffset="@integer/widget_value_fade_in_delay_millis"
+    android:toAlpha="1" />
