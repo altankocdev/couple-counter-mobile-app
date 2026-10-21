@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="widget_corner_radius">24dp</dimen>
+    <dimen name="widget_padding_horizontal">14dp</dimen>
+    <dimen name="widget_padding_vertical">4dp</dimen>
+    <dimen name="widget_logo_size">68dp</dimen>
+    <dimen name="widget_content_spacing">10dp</dimen>
+    <dimen name="widget_value_height">32dp</dimen>
+    <!-- Süsleme resminin çizim yüksekliği; widget'ta orantısı korunarak ölçeklenir. -->
+    <dimen name="widget_decoration_height">100dp</dimen>
+</resources>

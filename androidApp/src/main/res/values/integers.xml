@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget'ın "ne zamandır" ve "ne zaman" görünümleri arasındaki geçiş aralığı. -->
+    <integer name="widget_flip_interval_millis">8000</integer>
+    <!-- Süre formatı değişirken eski yazının sönme, yenisinin yanma süreleri. -->
+    <integer name="widget_value_fade_out_millis">200</integer>
+    <integer name="widget_value_fade_in_millis">250</integer>
+    <integer name="widget_value_fade_in_delay_millis">150</integer>
+</resources>

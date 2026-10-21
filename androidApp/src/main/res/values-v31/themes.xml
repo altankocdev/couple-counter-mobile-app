@@ -3,5 +3,8 @@
     <style name="Theme.DuoClock" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/launch_background</item>
         <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <!-- Açılışta ikonun daire arka planı yerine yalnızca logo gösterilir;
+             ikon gradyanının alt kısmı zeminle aynı renk olduğu için daire alttan kaybolurdu. -->
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
 </resources>

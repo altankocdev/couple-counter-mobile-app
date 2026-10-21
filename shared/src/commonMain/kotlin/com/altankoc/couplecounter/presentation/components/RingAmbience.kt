@@ -153,7 +153,7 @@ internal fun BoxScope.SecondsOrbit(color: Color, clock: Clock = Clock.System) {
                     glowAlpha = SPARK_GLOW_ALPHA
                 )
                 // Kıvılcımın başı, katman dönmemişken saat 12 hizasında durur.
-                val headAtTwelve = TWELVE_O_CLOCK_DEGREES - SPARK_TAIL_DEGREES - COMET_SEAM_PADDING_DEGREES
+                val headAtTwelve = TWELVE_O_CLOCK_DEGREES - SPARK_TAIL_DEGREES - DuoClockGeometry.COMET_SEAM_PADDING_DEGREES
                 onDrawBehind {
                     rotate(degrees = headAtTwelve, pivot = origin) { spark.draw(this) }
                 }
