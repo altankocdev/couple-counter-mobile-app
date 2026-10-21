@@ -17,3 +17,13 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# İmzalı release çıktıları depoya girmez.
+androidApp/release/
+*.apk
+*.aab
+
+# İmza anahtarları ve şifreleri asla depoya girmez.
+keystore.properties
+*.jks
+*.keystore
